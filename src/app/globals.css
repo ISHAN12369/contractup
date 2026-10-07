@@ -35,6 +35,16 @@ body::-webkit-scrollbar {
   display: none; /* Chrome/Safari */
 }
 
+button:disabled, input:disabled, textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+:focus-visible {
+  outline: 2px solid var(--studio-coral);
+  outline-offset: 4px;
+}
+
 /* --- Navigation & Layout --- */
 .studio-container {
   display: flex;

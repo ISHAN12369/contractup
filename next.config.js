@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  /* config options here */
+  // Keep the PDF worker/native dependencies available in Vercel's Node runtime.
+  serverExternalPackages: ['pdf-parse'],
 };
 
 module.exports = nextConfig;

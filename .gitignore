@@ -6,3 +6,19 @@ contractiq-backend/uploads/
 contractiq-backend/.env
 
 .env
+.env.local
+.env.*.local
+node_modules/
+.next/
+coverage/
+*.tsbuildinfo
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+contractiq-backend/data/
+contractiq-backend/model-cache/
+data/
+model-cache/
+.phase0-delivery/

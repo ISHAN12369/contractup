@@ -5,6 +5,13 @@ services:
     dockerfilePath: ./contractiq-backend/Dockerfile
     dockerContext: ./contractiq-backend
     plan: free
+    healthCheckPath: /health
     envVars:
       - key: GROQ_API_KEY
         sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: DOCUMENT_TTL_SECONDS
+        value: '3600'
+      - key: MAX_DOCUMENTS
+        value: '20'
