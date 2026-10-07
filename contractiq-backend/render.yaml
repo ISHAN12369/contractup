@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: contractiq-backend
+    runtime: docker
+    dockerfilePath: ./contractiq-backend/Dockerfile
+    dockerContext: ./contractiq-backend
+    plan: free
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false

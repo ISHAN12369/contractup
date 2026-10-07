@@ -1,0 +1,8 @@
+
+# Backend
+contractiq-backend/__pycache__/
+contractiq-backend/chroma_db/
+contractiq-backend/uploads/
+contractiq-backend/.env
+
+.env
