@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Loader2, Send } from 'lucide-react';
 import { Message } from '@/lib/contracts';
+import { SourceSelection } from '@/lib/audit-contracts';
 import { LegalNotice } from './legal-notice';
 
 const QUESTIONS = [
@@ -16,9 +17,9 @@ const QUESTIONS = [
   ['Dispute resolution', 'How are disputes handled between the parties?'],
 ];
 
-interface Props { messages: Message[]; available: boolean; busy: boolean; sending: boolean; onSend: (question: string) => Promise<boolean> }
+interface Props { messages: Message[]; available: boolean; busy: boolean; sending: boolean; onSend: (question: string) => Promise<boolean>; draft?: string; docId?: string; onSource?: (selection: SourceSelection) => void }
 
-export function ChatPanel({ messages, available, busy, sending, onSend }: Props) {
+export function ChatPanel({ messages, available, busy, sending, onSend, draft, docId, onSource }: Props) {
   const [input, setInput] = useState('');
   const [expanded, setExpanded] = useState(false);
   const end = useRef<HTMLDivElement>(null);
@@ -38,17 +39,19 @@ export function ChatPanel({ messages, available, busy, sending, onSend }: Props)
         <button key={label} disabled={!available || busy} className="text-xs border border-current/30 px-3 py-2 hover:bg-black/5" onClick={() => void submit(question)}>{label}</button>)}
       </div>
       <div className="border border-current/20 p-5 min-h-[220px] max-h-[55vh] overflow-y-auto" aria-live="polite" role="log" aria-label="Contract chat">
-        {messages.length === 0 && <p className="text-sm opacity-60">{available ? 'Ask a question. Answers use the four most relevant excerpts.' : 'Upload a contract to start chatting.'}</p>}
+        {messages.length === 0 && <p className="text-sm opacity-60">{available ? 'Ask a question. Answers use four retrieved excerpts and stream as an unverified draft until validation finishes.' : 'Upload a contract to start chatting.'}</p>}
         {messages.map((message, index) => <article key={index} className={`mb-6 ${message.role === 'user' ? 'pl-8' : ''}`}>
           <p className="text-xs uppercase tracking-wider font-bold mb-2">{message.role === 'user' ? 'You' : 'ContractIQ'}</p>
           <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
           {message.sources?.map(source => <details key={source.excerpt} className="mt-3 text-xs border-l-2 border-coral pl-3">
             <summary className="cursor-pointer">Excerpt {source.excerpt}{source.page ? ` · Page ${source.page}` : ''} · {source.chunk_id}</summary>
             <blockquote className="mt-2 whitespace-pre-wrap leading-relaxed">{source.preview}</blockquote>
+            {docId && onSource && <button className="underline mt-2" onClick={() => onSource({ docId, location: source, quote: source.preview })}>Highlight on source</button>}
           </details>)}
           {message.role === 'assistant' && <LegalNotice />}
         </article>)}
-        {sending && <p className="flex items-center gap-2 text-sm"><Loader2 className="w-4 h-4 animate-spin" /> Reading the excerpts…</p>}
+        {sending && <p className="flex items-center gap-2 text-sm"><Loader2 className="w-4 h-4 animate-spin" /> {draft ? 'Unverified draft — checking citations before saving' : 'Retrieving and checking excerpts…'}</p>}
+        {sending && draft && <div className="border border-dashed border-current/30 p-3 mt-3"><p className="text-sm whitespace-pre-wrap">{draft}</p><LegalNotice /></div>}
         <div ref={end} />
       </div>
       <form className="flex gap-2 mt-4" onSubmit={event => { event.preventDefault(); void submit(input); }}>

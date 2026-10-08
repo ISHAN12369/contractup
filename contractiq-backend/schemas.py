@@ -27,9 +27,32 @@ class ChatRequest(DocumentRequest):
 
 
 class Chunk(StrictModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=False)
     id: str
     text: str
     page: int | None
+    section_id: str = "unsectioned"
+    start: int = 0
+    end: int = 0
+    page_start: int = 0
+    page_end: int = 0
+    ocr: bool = False
+
+
+class OcrWord(StrictModel):
+    start: int
+    end: int
+    # Coordinates normalized to the rendered page, origin at top left.
+    box: tuple[float, float, float, float]
+
+
+class PageText(StrictModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=False)
+    page: int | None
+    text: str
+    start: int = 0
+    ocr: bool = False
+    words: list[OcrWord] = Field(default_factory=list)
 
 
 class DocumentMetadata(StrictModel):
@@ -39,11 +62,16 @@ class DocumentMetadata(StrictModel):
     num_chunks: int
     created_at: float
     expires_at: float
+    has_pdf: bool = False
+    ocr_pages: int = 0
+    chunking_strategy: str = "recursive"
 
 
 class DocumentRecord(StrictModel):
     metadata: DocumentMetadata
     chunks: list[Chunk]
+    pages: list[PageText] = Field(default_factory=list)
+    version: int = 2
 
 
 class Finding(StrictModel):
@@ -76,13 +104,21 @@ class Source(StrictModel):
     chunk_id: str
     preview: str
     page: int | None
-    distance: float
+    distance: float | None
+    section_id: str = "unsectioned"
+    start: int = 0
+    end: int = 0
+    page_start: int = 0
+    page_end: int = 0
+    ocr: bool = False
+    retrieval_score: float | None = None
 
 
 class ChatResponse(StrictModel):
     answer: str
     sources: list[Source]
     disclaimer: str = DISCLAIMER
+    strategy: str = "dense"
 
 
 class BenefitsResponse(StrictModel):

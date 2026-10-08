@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { AlertCircle, ArrowRight, History } from 'lucide-react';
 import { BenefitsPanel } from '@/components/benefits-panel';
 import { ChatPanel } from '@/components/chat-panel';
@@ -8,16 +8,22 @@ import { HistoryPanel } from '@/components/history-panel';
 import { LegalNotice } from '@/components/legal-notice';
 import { UploadPanel } from '@/components/upload-panel';
 import { useContract } from '@/hooks/use-contract';
+import { AuditPanel } from '@/components/audit-panel';
+import { ComparisonPanel } from '@/components/comparison-panel';
+import { SourceViewer } from '@/components/source-viewer';
+import { SourceSelection } from '@/lib/audit-contracts';
 
 export default function HomePage() {
   const contract = useContract();
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [source, setSource] = useState<SourceSelection | null>(null);
+  const closeSource = useCallback(() => setSource(null), []);
   const busy = contract.busy !== null;
   return <div className="studio-container relative">
     <aside className="studio-sidebar">
-      <a href="#intro" className="studio-logo" onClick={() => contract.reset()} aria-label="ContractIQ home">IQ</a>
+      <a href="#intro" className="studio-logo" onClick={() => { contract.reset(); setSource(null); }} aria-label="ContractIQ home">IQ</a>
       <nav className="studio-nav-links" aria-label="Main navigation">
-        {['intro', 'upload', 'benefits', 'chat'].map(section => <a key={section} href={`#${section}`} className="studio-nav-item">{section}</a>)}
+        {['intro', 'upload', 'benefits', 'chat', 'audit', 'compare'].map(section => <a key={section} href={`#${section}`} className="studio-nav-item">{section}</a>)}
       </nav>
       <button aria-label="Open history" onClick={() => setHistoryOpen(true)}><History className="w-5 h-5 text-coral" /></button>
     </aside>
@@ -38,8 +44,11 @@ export default function HomePage() {
       </section>
       <UploadPanel document={contract.document} busy={busy} onUpload={contract.upload} />
       <BenefitsPanel result={contract.benefits} available={!!contract.document} busy={busy} analyzing={contract.busy === 'benefits'} onAnalyze={contract.analyze} />
-      <ChatPanel messages={contract.messages} available={!!contract.document} busy={busy} sending={contract.busy === 'chat'} onSend={contract.chat} />
+      <ChatPanel messages={contract.messages} available={!!contract.document} busy={busy} sending={contract.busy === 'chat'} onSend={contract.chat} draft={contract.draft} docId={contract.document?.doc_id} onSource={setSource} />
+      <AuditPanel result={contract.audit} available={!!contract.document} busy={busy} analyzing={contract.busy === 'audit'} onAnalyze={contract.runAudit} onSource={setSource} />
+      <ComparisonPanel documents={contract.history} result={contract.comparison} busy={busy} comparing={contract.busy === 'compare'} onCompare={contract.compare} onSource={setSource} />
     </main>
+    {source && <SourceViewer selection={source} onClose={closeSource} />}
     {contract.error && <div role="alert" className="fixed bottom-4 left-24 right-4 z-[80] border border-coral bg-[#151515] text-white p-4 text-sm flex gap-3 shadow-xl">
       <AlertCircle className="w-5 h-5 text-coral shrink-0" /><span>{contract.error}</span>
     </div>}

@@ -30,7 +30,8 @@ def completion(value: object) -> httpx.Response:
 
 @pytest.fixture
 def settings(tmp_path):
-    return Settings(data_dir=tmp_path, groq_api_key="test-secret", rate_limit_requests=1000)
+    return Settings(data_dir=tmp_path, groq_api_key="test-secret", rate_limit_requests=1000,
+                    retriever_strategy="dense", pii_mode="patterns", ocr_enabled=False)
 
 
 @pytest.fixture

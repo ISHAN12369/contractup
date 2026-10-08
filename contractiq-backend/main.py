@@ -1,7 +1,9 @@
 """Single-worker FastAPI application. Blocking parsing/model work runs off-loop."""
 
 import asyncio
+import json
 import logging
+import queue
 import threading
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager, suppress
@@ -12,15 +14,23 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, File, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 from starlette.concurrency import run_in_threadpool
 from starlette.exceptions import HTTPException
 
+from audit_schemas import AuditRequest, AuditResponse, CompareRequest, CompareResponse
 from config import Settings
 from errors import ServiceError
 from llm import GroqLLM
 from rag_pipeline import RAGService
-from schemas import BenefitsResponse, ChatRequest, ChatResponse, DocumentMetadata, DocumentRequest
+from schemas import (
+    BenefitsResponse,
+    ChatRequest,
+    ChatResponse,
+    DocumentMetadata,
+    DocumentRecord,
+    DocumentRequest,
+)
 from security import SecurityMiddleware
 from storage import ChromaIndex, DocumentStore
 
@@ -121,6 +131,83 @@ def create_app(settings: Settings | None = None, service: RAGService | None = No
     @app.post("/benefits", response_model=BenefitsResponse)
     async def benefits(request: DocumentRequest) -> BenefitsResponse:
         return await run_in_threadpool(bounded, lambda: active_service.analyze_benefits(str(request.doc_id)))
+
+    @app.post("/audit", response_model=AuditResponse)
+    async def audit(request: AuditRequest) -> AuditResponse:
+        return await run_in_threadpool(bounded, lambda: active_service.audit(str(request.doc_id), request.india))
+
+    @app.post("/compare", response_model=CompareResponse)
+    async def compare(request: CompareRequest) -> CompareResponse:
+        return await run_in_threadpool(bounded, lambda: active_service.compare(str(request.before_id), str(request.after_id)))
+
+    @app.post("/chat/stream")
+    async def stream_chat(body: ChatRequest, request: Request) -> StreamingResponse:
+        await run_in_threadpool(active_service.store.get, str(body.doc_id))
+        cancelled = threading.Event()
+        messages: queue.Queue[tuple[str, object] | None] = queue.Queue(maxsize=32)
+        request_id = request.state.request_id
+
+        def send(value: tuple[str, object] | None) -> None:
+            while not cancelled.is_set():
+                try:
+                    messages.put(value, timeout=0.1)
+                    return
+                except queue.Full:
+                    continue
+
+        def produce() -> None:
+            def consume() -> None:
+                for event in active_service.stream_answer(body, cancelled):
+                    if cancelled.is_set():
+                        break
+                    send(event)
+            try:
+                bounded(consume)
+            except ServiceError as exc:
+                send(("error", {"detail": exc.message, "status": exc.status, "request_id": request_id}))
+            except Exception as exc:
+                logger.error("stream_failed request_id=%s error_type=%s", request_id, type(exc).__name__)
+                send(("error", {"detail": "The streamed answer could not be completed.", "status": 500, "request_id": request_id}))
+            finally:
+                send(None)
+
+        async def events() -> AsyncIterator[str]:
+            worker = asyncio.create_task(run_in_threadpool(produce))
+            heartbeat = 0
+            try:
+                while True:
+                    try:
+                        value = messages.get_nowait()
+                    except queue.Empty:
+                        await asyncio.sleep(0.1)
+                        heartbeat += 1
+                        if heartbeat >= 100:
+                            heartbeat = 0
+                            yield ": keepalive\n\n"
+                        continue
+                    if value is None:
+                        break
+                    kind, payload = value
+                    yield f"event: {kind}\ndata: {json.dumps(payload, ensure_ascii=True)}\n\n"
+            finally:
+                cancelled.set()
+                # Provider read timeout bounds shutdown if a disconnect happens mid-read.
+                worker.add_done_callback(lambda finished: finished.exception() if not finished.cancelled() else None)
+
+        return StreamingResponse(events(), media_type="text/event-stream", headers={"X-Accel-Buffering": "no"})
+
+    @app.get("/document/{doc_id}/source", response_model=DocumentRecord)
+    def source(doc_id: UUID) -> DocumentRecord:
+        record = active_service.store.get(str(doc_id))
+        if not record.pages:
+            raise ServiceError(409, "Re-upload this older document to enable source locations.")
+        return record
+
+    @app.get("/document/{doc_id}/file")
+    def source_file(doc_id: UUID) -> Response:
+        return Response(active_service.store.pdf(str(doc_id)), media_type="application/pdf", headers={
+            "Content-Disposition": 'attachment; filename="contract.pdf"',
+        })
 
     @app.get("/document/{doc_id}", response_model=DocumentMetadata)
     def document(doc_id: UUID) -> DocumentMetadata:

@@ -5,12 +5,13 @@ import zipfile
 from pathlib import Path
 
 from defusedxml import ElementTree
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 from pypdf import PdfReader
 
+from chunking import split_pages
 from config import Settings
 from errors import InvalidDocument, ServiceError
-from schemas import Chunk
+from ocr import recognize_page
+from schemas import Chunk, PageText
 
 MAX_ARCHIVE_BYTES = 10 * 1024 * 1024
 MAX_ARCHIVE_ENTRIES = 1000
@@ -64,21 +65,29 @@ def validate_upload(filename: str, content: bytes, settings: Settings) -> str:
     return ext
 
 
-def extract_pages(filename: str, content: bytes, settings: Settings) -> list[tuple[int | None, str]]:
+def extract_document(filename: str, content: bytes, settings: Settings) -> list[PageText]:
     ext = validate_upload(filename, content, settings)
     try:
         if ext == ".pdf":
             reader = PdfReader(io.BytesIO(content))
             if reader.is_encrypted or len(reader.pages) > 60:
                 raise InvalidDocument("Encrypted PDFs or PDFs above 60 pages are unsupported.")
-            pages: list[tuple[int | None, str]] = []
+            pages: list[PageText] = []
             total = 0
+            ocr_count = 0
             for number, page in enumerate(reader.pages, 1):
                 text = page.extract_text() or ""
+                extracted = PageText(page=number, text=text)
+                if not text.strip():
+                    ocr_count += 1
+                    if ocr_count > settings.max_ocr_pages:
+                        raise InvalidDocument("The document exceeds the configured OCR page limit.")
+                    extracted = recognize_page(content, number, settings)
+                    text = extracted.text
                 total += len(text)
                 if total > settings.max_text_chars:
                     raise InvalidDocument("Extracted text exceeds the configured character limit.")
-                pages.append((number, text))
+                pages.append(extracted)
         elif ext == ".docx":
             with zipfile.ZipFile(io.BytesIO(content)) as archive:
                 root = ElementTree.fromstring(archive.read("word/document.xml"))
@@ -86,30 +95,33 @@ def extract_pages(filename: str, content: bytes, settings: Settings) -> list[tup
                     "".join(node.text or "" for node in paragraph.iter(f"{WORD_NS}t"))
                     for paragraph in root.iter(f"{WORD_NS}p")
                 )
-            pages = [(None, text)]
+            pages = [PageText(page=None, text=text)]
         else:
-            pages = [(None, content.decode("utf-8-sig"))]
+            pages = [PageText(page=None, text=content.decode("utf-8-sig"))]
     except ServiceError:
         raise
     except Exception as exc:
         raise InvalidDocument() from exc
-    if sum(len(text) for _, text in pages) > settings.max_text_chars:
+    if sum(len(page.text) for page in pages) > settings.max_text_chars:
         raise InvalidDocument("Extracted text exceeds the configured character limit.")
-    if not any(text.strip() for _, text in pages):
-        raise InvalidDocument("No extractable text found. Scanned PDFs need OCR, which is not available yet.")
+    if not any(page.text.strip() for page in pages):
+        raise InvalidDocument("No text was found, including by OCR. Try a clearer document.")
+    offset = 0
+    for extracted_page in pages:
+        extracted_page.start = offset
+        offset += len(extracted_page.text) + 2  # Canonical pages joined with two newline characters.
     return pages
 
 
 def chunk_pages(pages: list[tuple[int | None, str]], settings: Settings) -> list[Chunk]:
-    splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000, chunk_overlap=150, separators=["\n\n", "\n", ". ", " ", ""]
-    )
-    chunks = [
-        Chunk(id=f"c{index:05d}", text=text, page=page)
-        for index, (page, text) in enumerate(
-            (page, text) for page, full in pages for text in splitter.split_text(full)
-        )
-    ]
-    if len(chunks) > settings.max_chunks:
-        raise InvalidDocument("The document exceeds the configured chunk limit. Split it into smaller files.")
-    return chunks
+    converted: list[PageText] = []
+    offset = 0
+    for page, text in pages:
+        converted.append(PageText(page=page, text=text, start=offset))
+        offset += len(text) + 2
+    return split_pages(converted, settings)
+
+
+def extract_pages(filename: str, content: bytes, settings: Settings) -> list[tuple[int | None, str]]:
+    """Compatibility helper for integrations using Phase 0's text-only parser interface."""
+    return [(page.page, page.text) for page in extract_document(filename, content, settings)]

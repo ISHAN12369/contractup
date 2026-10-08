@@ -2,6 +2,7 @@
 
 import os
 from pathlib import Path
+from typing import Literal
 from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -28,6 +29,18 @@ class Settings(BaseModel):
     analysis_timeout_seconds: int = Field(default=240, ge=1, le=1800)
     structured_retries: int = Field(default=1, ge=0, le=2)
     map_batch_chars: int = Field(default=6000, ge=1000, le=12000)
+    chunking_strategy: Literal["recursive", "clause"] = "clause"
+    retriever_strategy: Literal["dense", "hybrid", "hybrid_rerank"] = "hybrid_rerank"
+    retrieval_candidates: int = Field(default=12, ge=4, le=40)
+    reranker_model: str = "Xenova/ms-marco-MiniLM-L-6-v2"
+    pii_mode: Literal["standard", "patterns"] = "standard"
+    pii_model: str = "en_core_web_sm"
+    ocr_enabled: bool = True
+    ocr_language: str = "eng"
+    max_ocr_pages: int = Field(default=10, ge=1, le=30)
+    ocr_timeout_seconds: int = Field(default=20, ge=1, le=60)
+    india_rule_pack: bool = True
+    audit_max_clauses: int = Field(default=200, ge=1, le=600)
 
     @field_validator("cors_origins")
     @classmethod

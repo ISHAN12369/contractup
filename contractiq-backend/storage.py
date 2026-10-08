@@ -11,7 +11,7 @@ from uuid import UUID, uuid4
 
 from config import Settings
 from errors import MissingDocument, ServiceError
-from schemas import Chunk, DocumentMetadata, DocumentRecord
+from schemas import Chunk, DocumentMetadata, DocumentRecord, PageText
 
 logger = logging.getLogger(__name__)
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
@@ -91,7 +91,10 @@ class DocumentStore:
             raise MissingDocument() from exc
         return self.root / normalized
 
-    def create(self, filename: str, chars: int, chunks: list[Chunk]) -> DocumentMetadata:
+    def create(
+        self, filename: str, chars: int, chunks: list[Chunk], *,
+        pages: list[PageText] | None = None, pdf: bytes | None = None,
+    ) -> DocumentMetadata:
         with self.lock:
             self.cleanup()
             if len(list(self.root.iterdir())) >= self.settings.max_documents:
@@ -103,9 +106,13 @@ class DocumentStore:
             metadata = DocumentMetadata(
                 doc_id=doc_id, filename=filename, chars=chars, num_chunks=len(chunks),
                 created_at=now, expires_at=now + self.settings.document_ttl_seconds,
+                has_pdf=pdf is not None, ocr_pages=sum(page.ocr for page in pages or []),
+                chunking_strategy=self.settings.chunking_strategy,
             )
-            record = DocumentRecord(metadata=metadata, chunks=chunks)
+            record = DocumentRecord(metadata=metadata, chunks=chunks, pages=pages or [])
             try:
+                if pdf is not None:
+                    (directory / "source.pdf").write_bytes(pdf)
                 self.index.add(directory / "vectors", chunks)
                 (directory / "document.json").write_text(record.model_dump_json(), encoding="utf-8")
             except Exception:
@@ -113,6 +120,13 @@ class DocumentStore:
                 raise
             self.get(str(doc_id))
             return metadata
+
+    def pdf(self, doc_id: str) -> bytes:
+        with self.lock:
+            record = self.get(doc_id)
+            if not record.metadata.has_pdf:
+                raise ServiceError(404, "No original PDF is retained for this document. Re-upload if needed.")
+            return (self.directory(doc_id) / "source.pdf").read_bytes()
 
     def get(self, doc_id: str) -> DocumentRecord:
         with self.lock:

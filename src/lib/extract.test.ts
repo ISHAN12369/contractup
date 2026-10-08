@@ -37,7 +37,7 @@ it('extracts text and DOCX in the fallback route and adds request IDs', async ()
   expect(response.status).toBe(200);
   expect(await response.json()).toEqual({ text: 'Contract text', chars: 13 });
   expect(response.headers.get('x-request-id')).toBeTruthy();
-}, 30_000); // Cold import of the real DOCX parser can be slow on Windows/OneDrive.
+}, 60_000); // Cold import of the real DOCX parser can be slow on Windows/OneDrive.
 
 it('rejects a streamed oversized body without trusting Content-Length', async () => {
   const request = new NextRequest('http://localhost:3000/api/extract', { method: 'POST', body: 'x'.repeat(MAX_UPLOAD_BYTES + 65537) });

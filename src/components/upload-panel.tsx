@@ -43,7 +43,7 @@ export function UploadPanel({ document, busy, onUpload }: Props) {
           <span className="block font-semibold">{busy ? 'Processing…' : 'Drop a contract or choose a file'}</span>
           <span className="block text-xs mt-3">PDF, DOCX, TXT, MD · default limit 2 MiB</span>
         </button>
-        <p className="text-xs leading-relaxed mt-4 opacity-75">Text and vectors are stored temporarily on the backend. Contract text is sent to Groq for analysis. Browser history saves only document IDs and metadata.</p>
+        <p className="text-xs leading-relaxed mt-4 opacity-75">PDFs, extracted text and vectors are retained until the backend expiry/cleanup. Local PII detection redacts detected entities before Groq analysis; it can miss information. Browser history saves only document IDs and metadata.</p>
       </div>
       <div>
         <label htmlFor="paste-contract" className="block text-xs font-bold uppercase tracking-wider mb-3">Or paste contract text</label>
@@ -55,7 +55,7 @@ export function UploadPanel({ document, busy, onUpload }: Props) {
     </div>
     {document && <div className="flex gap-3 items-start p-4 border border-current/30 mt-8 w-full" role="status">
       <FileText className="w-5 h-5 shrink-0" />
-      <div><strong>{document.filename}</strong><p className="text-xs mt-1">{document.chars.toLocaleString()} characters · {document.num_chunks} chunks · expires {new Date(document.expires_at * 1000).toLocaleString()}</p></div>
+      <div><strong>{document.filename}</strong><p className="text-xs mt-1">{document.chars.toLocaleString()} characters · {document.num_chunks} {document.chunking_strategy} chunks · {document.ocr_pages} OCR pages · expires {new Date(document.expires_at * 1000).toLocaleString()}</p></div>
     </div>}
   </section>;
 }

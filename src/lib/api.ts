@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { benefitsSchema, chatSchema, documentSchema, Message } from './contracts';
+import { auditSchema, comparisonSchema, IndiaContext, sourceDocumentSchema } from './audit-contracts';
+import { consumeChatStream, StreamError } from './sse';
 
 const BASE_URL = (process.env.NEXT_PUBLIC_RAG_API_URL || 'http://localhost:8000').replace(/\/$/, '');
 
@@ -9,9 +11,9 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, schema: z.ZodType<T>, init: RequestInit = {}): Promise<T> {
+async function request<S extends z.ZodTypeAny>(path: string, schema: S, init: RequestInit = {}): Promise<z.output<S>> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 300_000);
+  const timer = setTimeout(() => controller.abort(), path === '/compare' ? 600_000 : 300_000);
   try {
     const response = await fetch(`${BASE_URL}${path}`, { ...init, signal: controller.signal, cache: 'no-store' });
     const requestId = response.headers.get('X-Request-ID') || undefined;
@@ -49,7 +51,38 @@ export const api = {
     return request(`/document/${encodeURIComponent(id)}`, z.object({ deleted: z.string().uuid() }), { method: 'DELETE' });
   },
   benefits(id: string) { return request('/benefits', benefitsSchema, json({ doc_id: id })); },
-  chat(id: string, question: string, messages: Message[]) {
+  audit(id: string, india: IndiaContext) { return request('/audit', auditSchema, json({ doc_id: id, india })); },
+  compare(beforeId: string, afterId: string) { return request('/compare', comparisonSchema, json({ before_id: beforeId, after_id: afterId })); },
+  source(id: string) { return request(`/document/${encodeURIComponent(id)}/source`, sourceDocumentSchema); },
+  async pdf(id: string, signal: AbortSignal): Promise<Uint8Array> {
+    const response = await fetch(`${BASE_URL}/document/${encodeURIComponent(id)}/file`, { signal, cache: 'no-store' });
+    if (!response.ok) throw new ApiError('The original PDF is unavailable or expired.', response.status);
+    return new Uint8Array(await response.arrayBuffer());
+  },
+  async chat(id: string, question: string, messages: Message[], streaming?: { onDraft: (text: string) => void; signal: AbortSignal }) {
+    if (streaming) {
+      const controller = new AbortController();
+      const abort = () => controller.abort();
+      streaming.signal.addEventListener('abort', abort, { once: true });
+      if (streaming.signal.aborted) controller.abort();
+      const timeout = setTimeout(abort, 300_000);
+      try {
+        const response = await fetch(`${BASE_URL}/chat/stream`, {
+          ...json({ doc_id: id, question, history: messages.slice(-6).map(({ role, content }) => ({ role, content })) }),
+          signal: controller.signal, cache: 'no-store',
+        });
+        if (!response.ok || !response.body) throw new ApiError('The streamed request could not start.', response.status, response.headers.get('X-Request-ID') || undefined);
+        return await consumeChatStream(response.body, streaming.onDraft);
+      } catch (error) {
+        if (error instanceof ApiError) throw error;
+        if (error instanceof StreamError) throw new ApiError(error.message, error.status, error.requestId);
+        throw new ApiError(controller.signal.aborted ? 'The answer was cancelled or timed out.' : 'The answer stream failed validation or disconnected. Please retry.', 502);
+      } finally {
+        clearTimeout(timeout);
+        streaming.signal.removeEventListener('abort', abort);
+        streaming.onDraft('');
+      }
+    }
     return request('/chat', chatSchema, json({
       doc_id: id, question,
       history: messages.slice(-6).map(({ role, content }) => ({ role, content })),

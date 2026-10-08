@@ -2,7 +2,8 @@
 
 import json
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from threading import Event
 from typing import Protocol, TypeVar
 
 import httpx
@@ -34,6 +35,65 @@ class GroqLLM:
 
     def close(self) -> None:
         self.client.close()
+
+    def stream_json(self, schema: type[BaseModel], prompt: str, *, deadline: float, cancelled: Event) -> Iterator[str]:
+        """Groq JSON-object streaming; strict JSON-schema mode does not support streaming."""
+        if not self.settings.groq_api_key:
+            raise ServiceError(503, "The analysis provider is not configured.")
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise ServiceError(504, "Analysis exceeded its time budget.")
+        try:
+            with self.client.stream(
+                "POST", "https://api.groq.com/openai/v1/chat/completions",
+                headers={"Authorization": f"Bearer {self.settings.groq_api_key}"},
+                json={
+                    "model": self.settings.groq_model, "temperature": 0,
+                    "max_completion_tokens": 6000, "stream": True,
+                    "response_format": {"type": "json_object"},
+                    "messages": [
+                        {"role": "system", "content": GUARDRAILS + "\nOutput JSON with answer first, then excerpt_ids. Schema: " + json.dumps(schema.model_json_schema())},
+                        {"role": "user", "content": prompt},
+                    ],
+                }, timeout=min(remaining, self.settings.llm_timeout_seconds),
+            ) as response:
+                if response.status_code == 429:
+                    raise ServiceError(503, "The analysis provider is rate limited. Please try later.")
+                response.raise_for_status()
+                finished = False
+                size = 0
+                for line in response.iter_lines():
+                    if cancelled.is_set():
+                        return
+                    if time.monotonic() > deadline:
+                        raise ServiceError(504, "Analysis exceeded its time budget.")
+                    if not line.startswith("data:"):
+                        continue
+                    value = line[5:].strip()
+                    if value == "[DONE]":
+                        break
+                    payload = json.loads(value)
+                    for choice in payload.get("choices", []):
+                        reason = choice.get("finish_reason")
+                        if reason is not None:
+                            if reason != "stop":
+                                raise ValueError("Incomplete completion")
+                            finished = True
+                        delta = choice.get("delta", {})
+                        if delta.get("refusal"):
+                            raise ValueError("Refused completion")
+                        content = delta.get("content") or ""
+                        if not isinstance(content, str):
+                            raise ValueError("Invalid delta")
+                        size += len(content)
+                        if size > 40_000:
+                            raise ValueError("Oversized output")
+                        if content:
+                            yield content
+                if not finished:
+                    raise ValueError("Stream ended before completion")
+        except httpx.HTTPError as exc:
+            raise ModelFailure() from exc
 
     def generate(
         self, schema: type[T], prompt: str, *, deadline: float,

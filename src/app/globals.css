@@ -486,3 +486,9 @@ button:disabled, input:disabled, textarea:disabled {
   background-color: var(--studio-coral);
   border-color: transparent;
 }
+/* PDF.js text geometry; invisible text is retained for precise DOM range highlighting. */
+.pdf-text-layer { position: absolute; inset: 0; overflow: clip; line-height: 1; text-align: initial; text-size-adjust: none; transform-origin: 0 0; forced-color-adjust: none; }
+.pdf-text-layer :is(span, br) { color: transparent; position: absolute; white-space: pre; cursor: text; transform-origin: 0 0; }
+.pdf-text-layer span.markedContent { top: 0; height: 0; }
+.source-mark { position: absolute; background: rgba(255, 210, 20, 0.38); outline: 1px solid rgba(190, 130, 0, 0.5); }
+.audit-input { display: block; width: 100%; margin-top: 0.5rem; padding: 0.7rem; border: 1px solid rgba(255,255,255,0.3); background: #151515; color: #f4ead4; }

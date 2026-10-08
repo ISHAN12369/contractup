@@ -20,6 +20,7 @@ it('renders every party and finding, including later clauses, with click-to-quot
 it('preserves source quotations and pages in chat', () => {
   render(<ChatPanel messages={[{ role: 'assistant', content: 'Answer [Excerpt 1]', sources: [{
     excerpt: 1, chunk_id: 'c0', preview: 'Original clause text', page: 3, distance: 0.1,
+    section_id: '1.', start: 0, end: 20, page_start: 0, page_end: 20, ocr: false,
   }] }]} available busy={false} sending={false} onSend={vi.fn()} />);
   expect(screen.getByText('Excerpt 1 · Page 3 · c0')).toBeInTheDocument();
   expect(screen.getByText('Original clause text')).toBeInTheDocument();

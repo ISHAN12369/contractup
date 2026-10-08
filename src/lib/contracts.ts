@@ -5,6 +5,8 @@ export const DISCLAIMER = 'Informational only, not legal advice. Verify findings
 export const documentSchema = z.object({
   doc_id: z.string().uuid(), filename: z.string(), chars: z.number().int().nonnegative(),
   num_chunks: z.number().int().positive(), created_at: z.number(), expires_at: z.number(),
+  has_pdf: z.boolean().default(false), ocr_pages: z.number().int().default(0),
+  chunking_strategy: z.string().default('recursive'),
 });
 export const findingSchema = z.object({
   party: z.string().min(1), benefit: z.string().min(1), kind: z.enum(['benefit', 'obligation']),
@@ -12,10 +14,14 @@ export const findingSchema = z.object({
 });
 export const sourceSchema = z.object({
   excerpt: z.number().int().positive(), chunk_id: z.string(), preview: z.string(),
-  page: z.number().int().positive().nullable(), distance: z.number(),
+  page: z.number().int().positive().nullable(), distance: z.number().nullable(),
+  section_id: z.string().default('unsectioned'), start: z.number().int().default(0), end: z.number().int().default(0),
+  page_start: z.number().int().default(0), page_end: z.number().int().default(0), ocr: z.boolean().default(false),
+  retrieval_score: z.number().nullable().optional(),
 });
 export const chatSchema = z.object({
   answer: z.string().min(1), sources: z.array(sourceSchema), disclaimer: z.string(),
+  strategy: z.string().default('dense'),
 });
 export const benefitsSchema = z.object({
   items: z.array(findingSchema), analyzed_chunks: z.number().int(), total_chunks: z.number().int(),
