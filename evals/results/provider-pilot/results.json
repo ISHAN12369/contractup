@@ -1,0 +1,1547 @@
+{
+  "schema_version": 1,
+  "status": "completed_with_errors",
+  "started_at_utc": "2026-10-10T08:51:01.330981+00:00",
+  "provenance": {
+    "git_commit": "ab95ae171ee7fb974be50ce14f1ff20759111bbf",
+    "working_tree_dirty": true,
+    "source_sha256": {
+      "contractiq-backend\\audit.py": "7deb86986b0abe29c12bdabce8ac23fdf508b845a844b797be387a35d886f4f6",
+      "contractiq-backend\\audit_schemas.py": "37eee2ad21d08074836591c7cb7baabb5f958556c38f43935f44abcbe8565453",
+      "contractiq-backend\\chunking.py": "13b99a1df48e6050d16a96414f36975a635879f700687a7b4c127f1c69ab94e6",
+      "contractiq-backend\\comparison.py": "6a22335fa2b4462425b46bbe014ddf6592466ffe133d4bc59a13d7e9f07d9b50",
+      "contractiq-backend\\config.py": "abe76d7440afa0106b8db20dc90a4a6e0a2c5031f277e4ad3a3fab41dd54162c",
+      "contractiq-backend\\errors.py": "2f438f0878e93680e73b74f11725e4254a2b1cedfaf8bd9330b3b486377a0ec4",
+      "contractiq-backend\\india_rules.py": "03f94ee65aed7a6d648434bb5dd87f0d094894db5c21aa881a7cc18bfd2b7598",
+      "contractiq-backend\\llm.py": "592b046c66bf16a968dd45216f9be44efc167e1811f4612d60f6823ccc0fec51",
+      "contractiq-backend\\locations.py": "c6dd2ed068536e23f3b0e29770fd225d8b47116cf0e72881a8d5c67bf03dcc99",
+      "contractiq-backend\\main.py": "9e2b89fe11e4f498edf678be1eb2da768479a5cf0e11fd1afacccbb0fa88b3eb",
+      "contractiq-backend\\ocr.py": "58946435768640f9ec3d8e834aa6e93ebc19d2a19b8e0b3591029973a35dfa64",
+      "contractiq-backend\\parsing.py": "1638268dec8c45e97a9fefab07ec2adeb19ee5ed045a2305f120413da27edfc1",
+      "contractiq-backend\\privacy.py": "617eb6cae7170bebb7bc78a893bae709b24cd925b292d43351f2a2ea336ec5dd",
+      "contractiq-backend\\rag_pipeline.py": "73b0d85403d5e35007f37f3f6da4a94935749a78f545811335b083e20cd77dea",
+      "contractiq-backend\\retrieval.py": "e8ce869fecf213f3f1b268c5f9db25c51bf5256b32937ce8b8718c8d383c2311",
+      "contractiq-backend\\risk.py": "6eb1a276c8df8932f03ccdd29388a3ddf5e2bfdc9da5bd15e2dc6e81330bfd2f",
+      "contractiq-backend\\schemas.py": "fe7736128396934af0a81acbeedbae0fae9fc622b60aca6c1c2f287a0d41d8c3",
+      "contractiq-backend\\security.py": "7ce8cc9cfdd01a6e90513887a2096e9ad1d2ce56ae721b5fbc29c2c2c172ae88",
+      "contractiq-backend\\storage.py": "f78faeb7db27a3f5f3757caf41c75a86062231a95bc3884639e5073a4730a6b6",
+      "contractiq-backend\\streaming.py": "1e6e32640f74d20676358a300a8cc56febbc3af6e15fe183830bbc18082a7ce6",
+      "evals\\__init__.py": "d477fda0fc762f7c1d0544b4411cb3f842755e7efbec4d6979210b7b2fad0c1d",
+      "evals\\data.py": "f1a7485f551f265226c239726958465eddce369a62d11702e8ebd6c08d8450b4",
+      "evals\\judge.py": "5143e33527960f85b83d54c8064f741af56109dbf2be0a0923064fb0a53ae2f8",
+      "evals\\metrics.py": "712aad58677a8dbb588b1c0fdde9edbcca283702b38c32d0823bbbfa01ba9c3a",
+      "evals\\pilot.py": "868876e6e60d418b3649e2dd22548310eaee967e7844c45434faab2ad1f547df",
+      "evals\\prepare.py": "4bdfb3cdb575b3b82c09a2ea1a4736b2ce511fe149137dd06736ffc58e41d678",
+      "evals\\report.py": "f4f91982093721f181919e211808c439eb7d9ddf5becc232cb01c058a7e263b4",
+      "evals\\run.py": "66fa40c2e0f9dc99bc7ae05956ea99b2b24bfda8d5bf3cd7317a23f9c2f87714",
+      "evals\\score_predictions.py": "ebe57fdf67085e91b85212e3126d29df0e10d92ba83f1ca7d2bec39666ab2b39"
+    },
+    "python": "3.12.14",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "packages": {
+      "fastembed": "0.8.1",
+      "onnxruntime": "1.30.0",
+      "chromadb": "1.5.9",
+      "langchain-text-splitters": "1.1.3",
+      "langgraph": "1.2.14",
+      "presidio-analyzer": "2.2.364",
+      "pydantic": "2.13.5"
+    },
+    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+    "reranker_model": "Xenova/ms-marco-MiniLM-L-6-v2",
+    "model_artifact_sha256": {
+      "models--qdrant--all-MiniLM-L6-v2-onnx\\snapshots\\d13954661f83248295ba75c1ed411eef3b7b936e\\model.onnx": "bbd7b466f6d58e646fdc2bd5fd67b2f5e93c0b687011bd4548c420f7bd46f0c5",
+      "models--Xenova--ms-marco-MiniLM-L-6-v2\\snapshots\\a09144355adeed5f58c8ed011d209bf8ee5a1fec\\onnx\\model.onnx": "c623d0bcb99f4622beb413eaef00cfbe5db20df9f1dd982da4b4f26022881870"
+    },
+    "retrieval_candidates": 12,
+    "chunk_size": 1000,
+    "chunk_overlap": 150,
+    "rrf_constant": 60,
+    "k": 4,
+    "relevance_coverage": 0.5,
+    "extraction_iou": 0.5,
+    "generator_model": "openai/gpt-oss-20b",
+    "judge_rubric": "claim-support-and-directness-v1",
+    "pii_mode": "standard",
+    "pii_model": "en_core_web_sm",
+    "limits": {
+      "max_text_chars": 100000,
+      "max_chunks": 120,
+      "map_batch_chars": 6000,
+      "analysis_timeout_seconds": 240,
+      "audit_max_clauses": 200
+    },
+    "cuad": {
+      "revision": "67faa0e6023b04fcaae6cc09497ab00e5d63a2a2",
+      "archive_sha256": "f8161d18bea4e9c05e78fa6dda61c19c846fb8087ea969c172753bc2f45b999a",
+      "split": "test",
+      "test_documents": 102,
+      "eligible_documents": 88,
+      "excluded_by_length_or_structure": 14,
+      "max_chars": 100000,
+      "selected_documents": [
+        "PcquoteComInc_19990721_S-1A_EX-10.11_6377149_EX-10.11_Co-Branding Agreement2"
+      ],
+      "seed": 42,
+      "questions_per_doc": 1,
+      "document_limit": 1
+    },
+    "golden_sha256": "9ba7a97ac70c5690c0a8824a8057a0ceb9455741aefe45c04adc516747272b46",
+    "pilot": "one seeded CUAD question plus golden-lease questions 2, 5, 8; six configurations",
+    "judge_model": "openai/gpt-oss-20b",
+    "judge_same_as_generator": true,
+    "minimum_request_interval_seconds": 3.0,
+    "provider_http_status_counts": {
+      "200": 20,
+      "429": 24
+    }
+  },
+  "provider_evaluation": "requested",
+  "documents": [
+    {
+      "id": "PcquoteComInc_19990721_S-1A_EX-10.11_6377149_EX-10.11_Co-Branding Agreement2",
+      "source": "cuad",
+      "chars": 857,
+      "sha256": "f4315bbc3c62769c0f78a6c62a6a452e9b0ebbc409a8f7ee6cd73de55a9e01c1",
+      "questions": 1,
+      "gold_clauses": 7
+    },
+    {
+      "id": "golden-lease",
+      "source": "golden",
+      "chars": 4739,
+      "sha256": "c07dcb506389f89d3883db6eb6f3dd18b8eea2ed08514811ae77c257cfb8fa5b",
+      "questions": 3,
+      "gold_clauses": null
+    }
+  ],
+  "rows": [
+    {
+      "source": "cuad",
+      "document": "PcquoteComInc_19990721_S-1A_EX-10.11_6377149_EX-10.11_Co-Branding Agreement2",
+      "question_id": "PcquoteComInc_19990721_S-1A_EX-10.11_6377149_EX-10.11_Co-Branding Agreement2__Agreement Date",
+      "config": "recursive+dense",
+      "unanswerable": false,
+      "gold_spans": [
+        {
+          "start": 168,
+          "end": 184,
+          "label": "Agreement Date"
+        }
+      ],
+      "retrieval": {
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      "generation": {
+        "status": "ok",
+        "answer": "The contract excerpt indicates that the amendment is effective on December\u202f9,\u202f1996, and the signatures show dates of 12/5/96 and 12/12/96. These dates are key to the Agreement Date and should be reviewed by a lawyer to confirm the correct effective date and any potential discrepancies between the stated effective date and the signature dates.\n\n[Excerpt 1]",
+        "scores": {
+          "rubric": "claim-support-and-directness-v1",
+          "faithfulness": 0.5,
+          "answer_relevance": 1.0,
+          "claim_count": 4,
+          "abstains": false,
+          "claims": {
+            "claims": [
+              "The amendment is effective on December 9, 1996.",
+              "The signatures show dates of 12/5/96 and 12/12/96.",
+              "These dates are key to the Agreement Date.",
+              "It is recommended that a lawyer review these dates to confirm the correct effective date and any potential discrepancies between the stated effective date and the signature dates."
+            ],
+            "abstains": false
+          },
+          "judgment": {
+            "verdicts": [
+              {
+                "claim_index": 0,
+                "supported": true,
+                "evidence_quote": "made effective December 9, 1996",
+                "reason": "The context explicitly states the amendment is made effective on December 9, 1996."
+              },
+              {
+                "claim_index": 1,
+                "supported": true,
+                "evidence_quote": "12/5/96 Date:   12/12/96",
+                "reason": "The signature lines in the context show the dates 12/5/96 and 12/12/96."
+              },
+              {
+                "claim_index": 2,
+                "supported": false,
+                "evidence_quote": "made effective December 9, 1996",
+                "reason": "The context does not state that these dates are key to the Agreement Date."
+              },
+              {
+                "claim_index": 3,
+                "supported": false,
+                "evidence_quote": "made effective December 9, 1996",
+                "reason": "The context does not recommend lawyer review of the dates."
+              }
+            ],
+            "relevance": 2,
+            "relevance_reason": "The answer identifies the effective date and signature dates and recommends lawyer review, directly addressing the requested information."
+          }
+        },
+        "sources": [
+          {
+            "excerpt": 1,
+            "chunk_id": "c00000",
+            "preview": "[LOGO]\n\nAMENDMENT TO SECTION 2, PART B OF THE CO-BRANDING AGREEMENT\n\nThis amendment to Section 2 (titled \"Term\"), Part B of the Co-Branding Agreement is made effective December 9, 1996 by and between PC Quote, Inc. (hereinafter referred to as \"PCQ\") and A.B. Watley, Inc. (hereinafter referred to as \"ABW\"), who are also the parties contracted in the aforementioned Co-Branding Agreement. This Amendment shall apply to said PCQ and ABW and all of their subsidiaries and related companies.\n\n[***]\n\nSource: PCQUOTE COM INC, S-1/A, 7/21/1999\n\n\n\n\n\nAGREED TO BY:\n\n/s/ Steven Malin /s/ Howard Meltzer - -------------------------- --------------------------------- A.B. Watley, Inc. PC Quote, Inc. Mr. Steven Malin Mr. Howard Meltzer Director President Date:  12/5/96 Date:   12/12/96      -------------- ----------------\n\nSource: PCQUOTE COM INC, S-1/A, 7/21/1999",
+            "page": 1,
+            "distance": 0.660911,
+            "section_id": "unsectioned",
+            "start": 0,
+            "end": 857,
+            "page_start": 0,
+            "page_end": 857,
+            "ocr": false,
+            "retrieval_score": 0.33908891677856445
+          }
+        ]
+      },
+      "chunk_count": 1,
+      "ranked": [
+        {
+          "chunk_id": "c00000",
+          "start": 0,
+          "end": 857,
+          "score": 0.33908891677856445
+        }
+      ]
+    },
+    {
+      "source": "cuad",
+      "document": "PcquoteComInc_19990721_S-1A_EX-10.11_6377149_EX-10.11_Co-Branding Agreement2",
+      "question_id": "PcquoteComInc_19990721_S-1A_EX-10.11_6377149_EX-10.11_Co-Branding Agreement2__Agreement Date",
+      "config": "recursive+hybrid",
+      "unanswerable": false,
+      "gold_spans": [
+        {
+          "start": 168,
+          "end": 184,
+          "label": "Agreement Date"
+        }
+      ],
+      "retrieval": {
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 1,
+      "ranked": [
+        {
+          "chunk_id": "c00000",
+          "start": 0,
+          "end": 857,
+          "score": 0.03278688524590164
+        }
+      ]
+    },
+    {
+      "source": "cuad",
+      "document": "PcquoteComInc_19990721_S-1A_EX-10.11_6377149_EX-10.11_Co-Branding Agreement2",
+      "question_id": "PcquoteComInc_19990721_S-1A_EX-10.11_6377149_EX-10.11_Co-Branding Agreement2__Agreement Date",
+      "config": "recursive+hybrid_rerank",
+      "unanswerable": false,
+      "gold_spans": [
+        {
+          "start": 168,
+          "end": 184,
+          "label": "Agreement Date"
+        }
+      ],
+      "retrieval": {
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 1,
+      "ranked": [
+        {
+          "chunk_id": "c00000",
+          "start": 0,
+          "end": 857,
+          "score": -5.562869071960449
+        }
+      ]
+    },
+    {
+      "source": "golden",
+      "document": "golden-lease",
+      "question_id": "golden-lease:2",
+      "config": "recursive+dense",
+      "unanswerable": false,
+      "gold_spans": [
+        {
+          "start": 671,
+          "end": 792,
+          "label": ""
+        }
+      ],
+      "retrieval": {
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 8,
+      "ranked": [
+        {
+          "chunk_id": "c00001",
+          "start": 660,
+          "end": 1393,
+          "score": 0.5093532800674438
+        },
+        {
+          "chunk_id": "c00004",
+          "start": 2499,
+          "end": 3194,
+          "score": 0.40011167526245117
+        },
+        {
+          "chunk_id": "c00002",
+          "start": 1298,
+          "end": 1999,
+          "score": 0.3195362091064453
+        },
+        {
+          "chunk_id": "c00005",
+          "start": 3077,
+          "end": 3769,
+          "score": 0.29811763763427734
+        }
+      ]
+    },
+    {
+      "source": "golden",
+      "document": "golden-lease",
+      "question_id": "golden-lease:5",
+      "config": "recursive+dense",
+      "unanswerable": false,
+      "gold_spans": [
+        {
+          "start": 2507,
+          "end": 2597,
+          "label": ""
+        }
+      ],
+      "retrieval": {
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 8,
+      "ranked": [
+        {
+          "chunk_id": "c00004",
+          "start": 2499,
+          "end": 3194,
+          "score": 0.5919541716575623
+        },
+        {
+          "chunk_id": "c00001",
+          "start": 660,
+          "end": 1393,
+          "score": 0.3426305055618286
+        },
+        {
+          "chunk_id": "c00005",
+          "start": 3077,
+          "end": 3769,
+          "score": 0.3371409773826599
+        },
+        {
+          "chunk_id": "c00003",
+          "start": 1899,
+          "end": 2597,
+          "score": 0.33162468671798706
+        }
+      ]
+    },
+    {
+      "source": "golden",
+      "document": "golden-lease",
+      "question_id": "golden-lease:8",
+      "config": "recursive+dense",
+      "unanswerable": true,
+      "gold_spans": [],
+      "retrieval": null,
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 8,
+      "ranked": [
+        {
+          "chunk_id": "c00001",
+          "start": 660,
+          "end": 1393,
+          "score": 0.35281902551651
+        },
+        {
+          "chunk_id": "c00000",
+          "start": 0,
+          "end": 792,
+          "score": 0.3363494873046875
+        },
+        {
+          "chunk_id": "c00003",
+          "start": 1899,
+          "end": 2597,
+          "score": 0.3031613826751709
+        },
+        {
+          "chunk_id": "c00005",
+          "start": 3077,
+          "end": 3769,
+          "score": 0.2725318670272827
+        }
+      ]
+    },
+    {
+      "source": "golden",
+      "document": "golden-lease",
+      "question_id": "golden-lease:2",
+      "config": "recursive+hybrid",
+      "unanswerable": false,
+      "gold_spans": [
+        {
+          "start": 671,
+          "end": 792,
+          "label": ""
+        }
+      ],
+      "retrieval": {
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 8,
+      "ranked": [
+        {
+          "chunk_id": "c00001",
+          "start": 660,
+          "end": 1393,
+          "score": 0.03278688524590164
+        },
+        {
+          "chunk_id": "c00005",
+          "start": 3077,
+          "end": 3769,
+          "score": 0.031754032258064516
+        },
+        {
+          "chunk_id": "c00004",
+          "start": 2499,
+          "end": 3194,
+          "score": 0.031054405392392875
+        },
+        {
+          "chunk_id": "c00000",
+          "start": 0,
+          "end": 792,
+          "score": 0.031024531024531024
+        }
+      ]
+    },
+    {
+      "source": "golden",
+      "document": "golden-lease",
+      "question_id": "golden-lease:5",
+      "config": "recursive+hybrid",
+      "unanswerable": false,
+      "gold_spans": [
+        {
+          "start": 2507,
+          "end": 2597,
+          "label": ""
+        }
+      ],
+      "retrieval": {
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 8,
+      "ranked": [
+        {
+          "chunk_id": "c00003",
+          "start": 1899,
+          "end": 2597,
+          "score": 0.032018442622950824
+        },
+        {
+          "chunk_id": "c00004",
+          "start": 2499,
+          "end": 3194,
+          "score": 0.032018442622950824
+        },
+        {
+          "chunk_id": "c00007",
+          "start": 4264,
+          "end": 4739,
+          "score": 0.03125763125763126
+        },
+        {
+          "chunk_id": "c00001",
+          "start": 660,
+          "end": 1393,
+          "score": 0.031054405392392875
+        }
+      ]
+    },
+    {
+      "source": "golden",
+      "document": "golden-lease",
+      "question_id": "golden-lease:8",
+      "config": "recursive+hybrid",
+      "unanswerable": true,
+      "gold_spans": [],
+      "retrieval": null,
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 8,
+      "ranked": [
+        {
+          "chunk_id": "c00000",
+          "start": 0,
+          "end": 792,
+          "score": 0.03252247488101534
+        },
+        {
+          "chunk_id": "c00003",
+          "start": 1899,
+          "end": 2597,
+          "score": 0.031746031746031744
+        },
+        {
+          "chunk_id": "c00004",
+          "start": 2499,
+          "end": 3194,
+          "score": 0.0315136476426799
+        },
+        {
+          "chunk_id": "c00001",
+          "start": 660,
+          "end": 1393,
+          "score": 0.03131881575727918
+        }
+      ]
+    },
+    {
+      "source": "golden",
+      "document": "golden-lease",
+      "question_id": "golden-lease:2",
+      "config": "recursive+hybrid_rerank",
+      "unanswerable": false,
+      "gold_spans": [
+        {
+          "start": 671,
+          "end": 792,
+          "label": ""
+        }
+      ],
+      "retrieval": {
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 8,
+      "ranked": [
+        {
+          "chunk_id": "c00001",
+          "start": 660,
+          "end": 1393,
+          "score": 1.4821765422821045
+        },
+        {
+          "chunk_id": "c00000",
+          "start": 0,
+          "end": 792,
+          "score": -5.488447189331055
+        },
+        {
+          "chunk_id": "c00004",
+          "start": 2499,
+          "end": 3194,
+          "score": -9.010054588317871
+        },
+        {
+          "chunk_id": "c00003",
+          "start": 1899,
+          "end": 2597,
+          "score": -10.28489875793457
+        }
+      ]
+    },
+    {
+      "source": "golden",
+      "document": "golden-lease",
+      "question_id": "golden-lease:5",
+      "config": "recursive+hybrid_rerank",
+      "unanswerable": false,
+      "gold_spans": [
+        {
+          "start": 2507,
+          "end": 2597,
+          "label": ""
+        }
+      ],
+      "retrieval": {
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 8,
+      "ranked": [
+        {
+          "chunk_id": "c00004",
+          "start": 2499,
+          "end": 3194,
+          "score": -4.73467493057251
+        },
+        {
+          "chunk_id": "c00003",
+          "start": 1899,
+          "end": 2597,
+          "score": -7.838456630706787
+        },
+        {
+          "chunk_id": "c00002",
+          "start": 1298,
+          "end": 1999,
+          "score": -9.872480392456055
+        },
+        {
+          "chunk_id": "c00000",
+          "start": 0,
+          "end": 792,
+          "score": -10.5267333984375
+        }
+      ]
+    },
+    {
+      "source": "golden",
+      "document": "golden-lease",
+      "question_id": "golden-lease:8",
+      "config": "recursive+hybrid_rerank",
+      "unanswerable": true,
+      "gold_spans": [],
+      "retrieval": null,
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 8,
+      "ranked": [
+        {
+          "chunk_id": "c00000",
+          "start": 0,
+          "end": 792,
+          "score": -10.065969467163086
+        },
+        {
+          "chunk_id": "c00001",
+          "start": 660,
+          "end": 1393,
+          "score": -11.112369537353516
+        },
+        {
+          "chunk_id": "c00004",
+          "start": 2499,
+          "end": 3194,
+          "score": -11.177589416503906
+        },
+        {
+          "chunk_id": "c00006",
+          "start": 3666,
+          "end": 4262,
+          "score": -11.298721313476562
+        }
+      ]
+    },
+    {
+      "source": "cuad",
+      "document": "PcquoteComInc_19990721_S-1A_EX-10.11_6377149_EX-10.11_Co-Branding Agreement2",
+      "question_id": "PcquoteComInc_19990721_S-1A_EX-10.11_6377149_EX-10.11_Co-Branding Agreement2__Agreement Date",
+      "config": "clause+dense",
+      "unanswerable": false,
+      "gold_spans": [
+        {
+          "start": 168,
+          "end": 184,
+          "label": "Agreement Date"
+        }
+      ],
+      "retrieval": {
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      "generation": {
+        "status": "failed",
+        "error_type": "ModelFailure"
+      },
+      "chunk_count": 1,
+      "ranked": [
+        {
+          "chunk_id": "c00000",
+          "start": 0,
+          "end": 857,
+          "score": 0.33908891677856445
+        }
+      ]
+    },
+    {
+      "source": "cuad",
+      "document": "PcquoteComInc_19990721_S-1A_EX-10.11_6377149_EX-10.11_Co-Branding Agreement2",
+      "question_id": "PcquoteComInc_19990721_S-1A_EX-10.11_6377149_EX-10.11_Co-Branding Agreement2__Agreement Date",
+      "config": "clause+hybrid",
+      "unanswerable": false,
+      "gold_spans": [
+        {
+          "start": 168,
+          "end": 184,
+          "label": "Agreement Date"
+        }
+      ],
+      "retrieval": {
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 1,
+      "ranked": [
+        {
+          "chunk_id": "c00000",
+          "start": 0,
+          "end": 857,
+          "score": 0.03278688524590164
+        }
+      ]
+    },
+    {
+      "source": "cuad",
+      "document": "PcquoteComInc_19990721_S-1A_EX-10.11_6377149_EX-10.11_Co-Branding Agreement2",
+      "question_id": "PcquoteComInc_19990721_S-1A_EX-10.11_6377149_EX-10.11_Co-Branding Agreement2__Agreement Date",
+      "config": "clause+hybrid_rerank",
+      "unanswerable": false,
+      "gold_spans": [
+        {
+          "start": 168,
+          "end": 184,
+          "label": "Agreement Date"
+        }
+      ],
+      "retrieval": {
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 1,
+      "ranked": [
+        {
+          "chunk_id": "c00000",
+          "start": 0,
+          "end": 857,
+          "score": -5.562869071960449
+        }
+      ]
+    },
+    {
+      "source": "golden",
+      "document": "golden-lease",
+      "question_id": "golden-lease:2",
+      "config": "clause+dense",
+      "unanswerable": false,
+      "gold_spans": [
+        {
+          "start": 671,
+          "end": 792,
+          "label": ""
+        }
+      ],
+      "retrieval": {
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 16,
+      "ranked": [
+        {
+          "chunk_id": "c00003",
+          "start": 660,
+          "end": 792,
+          "score": 0.5430662035942078
+        },
+        {
+          "chunk_id": "c00009",
+          "start": 2499,
+          "end": 2597,
+          "score": 0.35576802492141724
+        },
+        {
+          "chunk_id": "c00005",
+          "start": 1298,
+          "end": 1393,
+          "score": 0.30455541610717773
+        },
+        {
+          "chunk_id": "c00011",
+          "start": 3077,
+          "end": 3194,
+          "score": 0.2803906202316284
+        }
+      ]
+    },
+    {
+      "source": "golden",
+      "document": "golden-lease",
+      "question_id": "golden-lease:5",
+      "config": "clause+dense",
+      "unanswerable": false,
+      "gold_spans": [
+        {
+          "start": 2507,
+          "end": 2597,
+          "label": ""
+        }
+      ],
+      "retrieval": {
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 16,
+      "ranked": [
+        {
+          "chunk_id": "c00009",
+          "start": 2499,
+          "end": 2597,
+          "score": 0.6267274022102356
+        },
+        {
+          "chunk_id": "c00011",
+          "start": 3077,
+          "end": 3194,
+          "score": 0.35015159845352173
+        },
+        {
+          "chunk_id": "c00010",
+          "start": 2599,
+          "end": 3075,
+          "score": 0.3344811201095581
+        },
+        {
+          "chunk_id": "c00001",
+          "start": 91,
+          "end": 172,
+          "score": 0.33202552795410156
+        }
+      ]
+    },
+    {
+      "source": "golden",
+      "document": "golden-lease",
+      "question_id": "golden-lease:8",
+      "config": "clause+dense",
+      "unanswerable": true,
+      "gold_spans": [],
+      "retrieval": null,
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 16,
+      "ranked": [
+        {
+          "chunk_id": "c00001",
+          "start": 91,
+          "end": 172,
+          "score": 0.4711100459098816
+        },
+        {
+          "chunk_id": "c00003",
+          "start": 660,
+          "end": 792,
+          "score": 0.3891867995262146
+        },
+        {
+          "chunk_id": "c00013",
+          "start": 3666,
+          "end": 3769,
+          "score": 0.34210526943206787
+        },
+        {
+          "chunk_id": "c00005",
+          "start": 1298,
+          "end": 1393,
+          "score": 0.30862659215927124
+        }
+      ]
+    },
+    {
+      "source": "golden",
+      "document": "golden-lease",
+      "question_id": "golden-lease:2",
+      "config": "clause+hybrid",
+      "unanswerable": false,
+      "gold_spans": [
+        {
+          "start": 671,
+          "end": 792,
+          "label": ""
+        }
+      ],
+      "retrieval": {
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 16,
+      "ranked": [
+        {
+          "chunk_id": "c00003",
+          "start": 660,
+          "end": 792,
+          "score": 0.03278688524590164
+        },
+        {
+          "chunk_id": "c00009",
+          "start": 2499,
+          "end": 2597,
+          "score": 0.03200204813108039
+        },
+        {
+          "chunk_id": "c00011",
+          "start": 3077,
+          "end": 3194,
+          "score": 0.029910714285714284
+        },
+        {
+          "chunk_id": "c00004",
+          "start": 794,
+          "end": 1296,
+          "score": 0.029877369007803793
+        }
+      ]
+    },
+    {
+      "source": "golden",
+      "document": "golden-lease",
+      "question_id": "golden-lease:5",
+      "config": "clause+hybrid",
+      "unanswerable": false,
+      "gold_spans": [
+        {
+          "start": 2507,
+          "end": 2597,
+          "label": ""
+        }
+      ],
+      "retrieval": {
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 16,
+      "ranked": [
+        {
+          "chunk_id": "c00009",
+          "start": 2499,
+          "end": 2597,
+          "score": 0.03278688524590164
+        },
+        {
+          "chunk_id": "c00015",
+          "start": 4264,
+          "end": 4739,
+          "score": 0.03128054740957967
+        },
+        {
+          "chunk_id": "c00001",
+          "start": 91,
+          "end": 172,
+          "score": 0.03125
+        },
+        {
+          "chunk_id": "c00010",
+          "start": 2599,
+          "end": 3075,
+          "score": 0.03036576949620428
+        }
+      ]
+    },
+    {
+      "source": "golden",
+      "document": "golden-lease",
+      "question_id": "golden-lease:8",
+      "config": "clause+hybrid",
+      "unanswerable": true,
+      "gold_spans": [],
+      "retrieval": null,
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 16,
+      "ranked": [
+        {
+          "chunk_id": "c00001",
+          "start": 91,
+          "end": 172,
+          "score": 0.03278688524590164
+        },
+        {
+          "chunk_id": "c00010",
+          "start": 2599,
+          "end": 3075,
+          "score": 0.0304147465437788
+        },
+        {
+          "chunk_id": "c00008",
+          "start": 2001,
+          "end": 2497,
+          "score": 0.03036576949620428
+        },
+        {
+          "chunk_id": "c00005",
+          "start": 1298,
+          "end": 1393,
+          "score": 0.030117753623188408
+        }
+      ]
+    },
+    {
+      "source": "golden",
+      "document": "golden-lease",
+      "question_id": "golden-lease:2",
+      "config": "clause+hybrid_rerank",
+      "unanswerable": false,
+      "gold_spans": [
+        {
+          "start": 671,
+          "end": 792,
+          "label": ""
+        }
+      ],
+      "retrieval": {
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 16,
+      "ranked": [
+        {
+          "chunk_id": "c00003",
+          "start": 660,
+          "end": 792,
+          "score": 2.0091309547424316
+        },
+        {
+          "chunk_id": "c00009",
+          "start": 2499,
+          "end": 2597,
+          "score": -5.830160140991211
+        },
+        {
+          "chunk_id": "c00005",
+          "start": 1298,
+          "end": 1393,
+          "score": -9.502843856811523
+        },
+        {
+          "chunk_id": "c00011",
+          "start": 3077,
+          "end": 3194,
+          "score": -11.04655933380127
+        }
+      ]
+    },
+    {
+      "source": "golden",
+      "document": "golden-lease",
+      "question_id": "golden-lease:5",
+      "config": "clause+hybrid_rerank",
+      "unanswerable": false,
+      "gold_spans": [
+        {
+          "start": 2507,
+          "end": 2597,
+          "label": ""
+        }
+      ],
+      "retrieval": {
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 16,
+      "ranked": [
+        {
+          "chunk_id": "c00009",
+          "start": 2499,
+          "end": 2597,
+          "score": -0.8127105236053467
+        },
+        {
+          "chunk_id": "c00010",
+          "start": 2599,
+          "end": 3075,
+          "score": -10.067632675170898
+        },
+        {
+          "chunk_id": "c00006",
+          "start": 1395,
+          "end": 1897,
+          "score": -10.352799415588379
+        },
+        {
+          "chunk_id": "c00005",
+          "start": 1298,
+          "end": 1393,
+          "score": -10.738201141357422
+        }
+      ]
+    },
+    {
+      "source": "golden",
+      "document": "golden-lease",
+      "question_id": "golden-lease:8",
+      "config": "clause+hybrid_rerank",
+      "unanswerable": true,
+      "gold_spans": [],
+      "retrieval": null,
+      "generation": {
+        "status": "failed",
+        "error_type": "ServiceError"
+      },
+      "chunk_count": 16,
+      "ranked": [
+        {
+          "chunk_id": "c00001",
+          "start": 91,
+          "end": 172,
+          "score": -6.117215156555176
+        },
+        {
+          "chunk_id": "c00003",
+          "start": 660,
+          "end": 792,
+          "score": -10.251687049865723
+        },
+        {
+          "chunk_id": "c00013",
+          "start": 3666,
+          "end": 3769,
+          "score": -10.354923248291016
+        },
+        {
+          "chunk_id": "c00005",
+          "start": 1298,
+          "end": 1393,
+          "score": -10.986993789672852
+        }
+      ]
+    }
+  ],
+  "audits": [
+    {
+      "document": "PcquoteComInc_19990721_S-1A_EX-10.11_6377149_EX-10.11_Co-Branding Agreement2",
+      "chunker": "recursive",
+      "status": "failed",
+      "error_type": "ServiceError"
+    },
+    {
+      "document": "PcquoteComInc_19990721_S-1A_EX-10.11_6377149_EX-10.11_Co-Branding Agreement2",
+      "chunker": "clause",
+      "status": "failed",
+      "error_type": "ServiceError"
+    }
+  ],
+  "summary": {
+    "retrieval": [
+      {
+        "source": "cuad",
+        "config": "clause+dense",
+        "questions": 1,
+        "answerable": 1,
+        "measured": 1,
+        "failed": 0,
+        "unanswerable_excluded": 0,
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      {
+        "source": "cuad",
+        "config": "clause+hybrid",
+        "questions": 1,
+        "answerable": 1,
+        "measured": 1,
+        "failed": 0,
+        "unanswerable_excluded": 0,
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      {
+        "source": "cuad",
+        "config": "clause+hybrid_rerank",
+        "questions": 1,
+        "answerable": 1,
+        "measured": 1,
+        "failed": 0,
+        "unanswerable_excluded": 0,
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      {
+        "source": "cuad",
+        "config": "recursive+dense",
+        "questions": 1,
+        "answerable": 1,
+        "measured": 1,
+        "failed": 0,
+        "unanswerable_excluded": 0,
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      {
+        "source": "cuad",
+        "config": "recursive+hybrid",
+        "questions": 1,
+        "answerable": 1,
+        "measured": 1,
+        "failed": 0,
+        "unanswerable_excluded": 0,
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      {
+        "source": "cuad",
+        "config": "recursive+hybrid_rerank",
+        "questions": 1,
+        "answerable": 1,
+        "measured": 1,
+        "failed": 0,
+        "unanswerable_excluded": 0,
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      {
+        "source": "golden",
+        "config": "clause+dense",
+        "questions": 3,
+        "answerable": 2,
+        "measured": 2,
+        "failed": 0,
+        "unanswerable_excluded": 1,
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      {
+        "source": "golden",
+        "config": "clause+hybrid",
+        "questions": 3,
+        "answerable": 2,
+        "measured": 2,
+        "failed": 0,
+        "unanswerable_excluded": 1,
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      {
+        "source": "golden",
+        "config": "clause+hybrid_rerank",
+        "questions": 3,
+        "answerable": 2,
+        "measured": 2,
+        "failed": 0,
+        "unanswerable_excluded": 1,
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      {
+        "source": "golden",
+        "config": "recursive+dense",
+        "questions": 3,
+        "answerable": 2,
+        "measured": 2,
+        "failed": 0,
+        "unanswerable_excluded": 1,
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      {
+        "source": "golden",
+        "config": "recursive+hybrid",
+        "questions": 3,
+        "answerable": 2,
+        "measured": 2,
+        "failed": 0,
+        "unanswerable_excluded": 1,
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      },
+      {
+        "source": "golden",
+        "config": "recursive+hybrid_rerank",
+        "questions": 3,
+        "answerable": 2,
+        "measured": 2,
+        "failed": 0,
+        "unanswerable_excluded": 1,
+        "hit_at_4": 1.0,
+        "mrr_at_4": 1.0,
+        "span_recall_at_4": 1.0
+      }
+    ],
+    "generation": [
+      {
+        "source": "cuad",
+        "config": "clause+dense",
+        "measured": 0,
+        "total": 1,
+        "failed": 1,
+        "not_run": 0,
+        "faithfulness": null,
+        "faithfulness_denominator": 0,
+        "answer_relevance": null,
+        "abstention_accuracy": null
+      },
+      {
+        "source": "cuad",
+        "config": "clause+hybrid",
+        "measured": 0,
+        "total": 1,
+        "failed": 1,
+        "not_run": 0,
+        "faithfulness": null,
+        "faithfulness_denominator": 0,
+        "answer_relevance": null,
+        "abstention_accuracy": null
+      },
+      {
+        "source": "cuad",
+        "config": "clause+hybrid_rerank",
+        "measured": 0,
+        "total": 1,
+        "failed": 1,
+        "not_run": 0,
+        "faithfulness": null,
+        "faithfulness_denominator": 0,
+        "answer_relevance": null,
+        "abstention_accuracy": null
+      },
+      {
+        "source": "cuad",
+        "config": "recursive+dense",
+        "measured": 1,
+        "total": 1,
+        "failed": 0,
+        "not_run": 0,
+        "faithfulness": 0.5,
+        "faithfulness_denominator": 1,
+        "answer_relevance": 1.0,
+        "abstention_accuracy": 1.0
+      },
+      {
+        "source": "cuad",
+        "config": "recursive+hybrid",
+        "measured": 0,
+        "total": 1,
+        "failed": 1,
+        "not_run": 0,
+        "faithfulness": null,
+        "faithfulness_denominator": 0,
+        "answer_relevance": null,
+        "abstention_accuracy": null
+      },
+      {
+        "source": "cuad",
+        "config": "recursive+hybrid_rerank",
+        "measured": 0,
+        "total": 1,
+        "failed": 1,
+        "not_run": 0,
+        "faithfulness": null,
+        "faithfulness_denominator": 0,
+        "answer_relevance": null,
+        "abstention_accuracy": null
+      },
+      {
+        "source": "golden",
+        "config": "clause+dense",
+        "measured": 0,
+        "total": 3,
+        "failed": 3,
+        "not_run": 0,
+        "faithfulness": null,
+        "faithfulness_denominator": 0,
+        "answer_relevance": null,
+        "abstention_accuracy": null
+      },
+      {
+        "source": "golden",
+        "config": "clause+hybrid",
+        "measured": 0,
+        "total": 3,
+        "failed": 3,
+        "not_run": 0,
+        "faithfulness": null,
+        "faithfulness_denominator": 0,
+        "answer_relevance": null,
+        "abstention_accuracy": null
+      },
+      {
+        "source": "golden",
+        "config": "clause+hybrid_rerank",
+        "measured": 0,
+        "total": 3,
+        "failed": 3,
+        "not_run": 0,
+        "faithfulness": null,
+        "faithfulness_denominator": 0,
+        "answer_relevance": null,
+        "abstention_accuracy": null
+      },
+      {
+        "source": "golden",
+        "config": "recursive+dense",
+        "measured": 0,
+        "total": 3,
+        "failed": 3,
+        "not_run": 0,
+        "faithfulness": null,
+        "faithfulness_denominator": 0,
+        "answer_relevance": null,
+        "abstention_accuracy": null
+      },
+      {
+        "source": "golden",
+        "config": "recursive+hybrid",
+        "measured": 0,
+        "total": 3,
+        "failed": 3,
+        "not_run": 0,
+        "faithfulness": null,
+        "faithfulness_denominator": 0,
+        "answer_relevance": null,
+        "abstention_accuracy": null
+      },
+      {
+        "source": "golden",
+        "config": "recursive+hybrid_rerank",
+        "measured": 0,
+        "total": 3,
+        "failed": 3,
+        "not_run": 0,
+        "faithfulness": null,
+        "faithfulness_denominator": 0,
+        "answer_relevance": null,
+        "abstention_accuracy": null
+      }
+    ],
+    "extraction": [
+      {
+        "source": "cuad",
+        "chunker": "clause",
+        "documents": 1,
+        "measured": 0,
+        "failed": 1,
+        "not_run": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null
+      },
+      {
+        "source": "cuad",
+        "chunker": "recursive",
+        "documents": 1,
+        "measured": 0,
+        "failed": 1,
+        "not_run": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null
+      }
+    ]
+  },
+  "completed_at_utc": "2026-10-10T08:53:18.851267+00:00"
+}

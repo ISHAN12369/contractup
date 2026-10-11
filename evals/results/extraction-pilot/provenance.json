@@ -1,0 +1,103 @@
+{
+  "git_commit": "ab95ae171ee7fb974be50ce14f1ff20759111bbf",
+  "working_tree_dirty": true,
+  "source_sha256": {
+    "contractiq-backend\\audit.py": "7deb86986b0abe29c12bdabce8ac23fdf508b845a844b797be387a35d886f4f6",
+    "contractiq-backend\\audit_schemas.py": "37eee2ad21d08074836591c7cb7baabb5f958556c38f43935f44abcbe8565453",
+    "contractiq-backend\\chunking.py": "13b99a1df48e6050d16a96414f36975a635879f700687a7b4c127f1c69ab94e6",
+    "contractiq-backend\\comparison.py": "6a22335fa2b4462425b46bbe014ddf6592466ffe133d4bc59a13d7e9f07d9b50",
+    "contractiq-backend\\config.py": "abe76d7440afa0106b8db20dc90a4a6e0a2c5031f277e4ad3a3fab41dd54162c",
+    "contractiq-backend\\errors.py": "2f438f0878e93680e73b74f11725e4254a2b1cedfaf8bd9330b3b486377a0ec4",
+    "contractiq-backend\\india_rules.py": "03f94ee65aed7a6d648434bb5dd87f0d094894db5c21aa881a7cc18bfd2b7598",
+    "contractiq-backend\\llm.py": "592b046c66bf16a968dd45216f9be44efc167e1811f4612d60f6823ccc0fec51",
+    "contractiq-backend\\locations.py": "c6dd2ed068536e23f3b0e29770fd225d8b47116cf0e72881a8d5c67bf03dcc99",
+    "contractiq-backend\\main.py": "9e2b89fe11e4f498edf678be1eb2da768479a5cf0e11fd1afacccbb0fa88b3eb",
+    "contractiq-backend\\ocr.py": "58946435768640f9ec3d8e834aa6e93ebc19d2a19b8e0b3591029973a35dfa64",
+    "contractiq-backend\\parsing.py": "1638268dec8c45e97a9fefab07ec2adeb19ee5ed045a2305f120413da27edfc1",
+    "contractiq-backend\\privacy.py": "617eb6cae7170bebb7bc78a893bae709b24cd925b292d43351f2a2ea336ec5dd",
+    "contractiq-backend\\rag_pipeline.py": "73b0d85403d5e35007f37f3f6da4a94935749a78f545811335b083e20cd77dea",
+    "contractiq-backend\\retrieval.py": "e8ce869fecf213f3f1b268c5f9db25c51bf5256b32937ce8b8718c8d383c2311",
+    "contractiq-backend\\risk.py": "6eb1a276c8df8932f03ccdd29388a3ddf5e2bfdc9da5bd15e2dc6e81330bfd2f",
+    "contractiq-backend\\schemas.py": "fe7736128396934af0a81acbeedbae0fae9fc622b60aca6c1c2f287a0d41d8c3",
+    "contractiq-backend\\security.py": "7ce8cc9cfdd01a6e90513887a2096e9ad1d2ce56ae721b5fbc29c2c2c172ae88",
+    "contractiq-backend\\storage.py": "f78faeb7db27a3f5f3757caf41c75a86062231a95bc3884639e5073a4730a6b6",
+    "contractiq-backend\\streaming.py": "1e6e32640f74d20676358a300a8cc56febbc3af6e15fe183830bbc18082a7ce6",
+    "evals\\__init__.py": "d477fda0fc762f7c1d0544b4411cb3f842755e7efbec4d6979210b7b2fad0c1d",
+    "evals\\data.py": "f1a7485f551f265226c239726958465eddce369a62d11702e8ebd6c08d8450b4",
+    "evals\\judge.py": "5143e33527960f85b83d54c8064f741af56109dbf2be0a0923064fb0a53ae2f8",
+    "evals\\metrics.py": "712aad58677a8dbb588b1c0fdde9edbcca283702b38c32d0823bbbfa01ba9c3a",
+    "evals\\pilot.py": "868876e6e60d418b3649e2dd22548310eaee967e7844c45434faab2ad1f547df",
+    "evals\\prepare.py": "4bdfb3cdb575b3b82c09a2ea1a4736b2ce511fe149137dd06736ffc58e41d678",
+    "evals\\report.py": "f4f91982093721f181919e211808c439eb7d9ddf5becc232cb01c058a7e263b4",
+    "evals\\run.py": "66fa40c2e0f9dc99bc7ae05956ea99b2b24bfda8d5bf3cd7317a23f9c2f87714",
+    "evals\\score_predictions.py": "ebe57fdf67085e91b85212e3126d29df0e10d92ba83f1ca7d2bec39666ab2b39"
+  },
+  "python": "3.12.14",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "packages": {
+    "fastembed": "0.8.1",
+    "onnxruntime": "1.30.0",
+    "chromadb": "1.5.9",
+    "langchain-text-splitters": "1.1.3",
+    "langgraph": "1.2.14",
+    "presidio-analyzer": "2.2.364",
+    "pydantic": "2.13.5"
+  },
+  "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+  "reranker_model": "Xenova/ms-marco-MiniLM-L-6-v2",
+  "model_artifact_sha256": {
+    "models--qdrant--all-MiniLM-L6-v2-onnx\\snapshots\\d13954661f83248295ba75c1ed411eef3b7b936e\\model.onnx": "bbd7b466f6d58e646fdc2bd5fd67b2f5e93c0b687011bd4548c420f7bd46f0c5",
+    "models--Xenova--ms-marco-MiniLM-L-6-v2\\snapshots\\a09144355adeed5f58c8ed011d209bf8ee5a1fec\\onnx\\model.onnx": "c623d0bcb99f4622beb413eaef00cfbe5db20df9f1dd982da4b4f26022881870"
+  },
+  "retrieval_candidates": 12,
+  "chunk_size": 1000,
+  "chunk_overlap": 150,
+  "rrf_constant": 60,
+  "k": 4,
+  "relevance_coverage": 0.5,
+  "extraction_iou": 0.5,
+  "generator_model": "openai/gpt-oss-20b",
+  "judge_rubric": "claim-support-and-directness-v1",
+  "pii_mode": "standard",
+  "pii_model": "en_core_web_sm",
+  "limits": {
+    "max_text_chars": 100000,
+    "max_chunks": 120,
+    "map_batch_chars": 6000,
+    "analysis_timeout_seconds": 240,
+    "audit_max_clauses": 200
+  },
+  "cuad": {
+    "revision": "67faa0e6023b04fcaae6cc09497ab00e5d63a2a2",
+    "archive_sha256": "f8161d18bea4e9c05e78fa6dda61c19c846fb8087ea969c172753bc2f45b999a",
+    "split": "test",
+    "test_documents": 102,
+    "eligible_documents": 88,
+    "excluded_by_length_or_structure": 14,
+    "max_chars": 100000,
+    "selected_documents": [
+      "PcquoteComInc_19990721_S-1A_EX-10.11_6377149_EX-10.11_Co-Branding Agreement2"
+    ],
+    "seed": 42,
+    "questions_per_doc": 0,
+    "document_limit": 1
+  },
+  "note": "Separate live diagnostic audit after the failed matrix pilot; one CUAD document, clause chunker. Not a retry that replaces any failed row.",
+  "provider_http_status_counts": {
+    "200": 2
+  },
+  "usage": [
+    {
+      "prompt_tokens": 763,
+      "completion_tokens": 189,
+      "total_tokens": 952
+    },
+    {
+      "prompt_tokens": 1517,
+      "completion_tokens": 1177,
+      "total_tokens": 2694
+    }
+  ],
+  "audit_sha256": "ead759a661a5762025a9c8bcaa27d77a4f431fc6748388d06297a1e1714ce06c",
+  "diagnostic_script_sha256": "50223a46dc2907f3069918f0457c2e1310d148b978a69b31c32d63707f68e50d"
+}

@@ -24,6 +24,9 @@ jobs:
       - run: python -m ruff check .
       - run: python -m mypy
       - run: python -m pytest -q
+      - run: python -m ruff check ../evals
+      - run: python -m mypy --config-file ../evals/pyproject.toml ../evals --exclude tests
+      - run: python -m pytest -q ../evals/tests
   frontend:
     runs-on: ubuntu-latest
     steps:

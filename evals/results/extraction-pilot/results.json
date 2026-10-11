@@ -1,0 +1,40 @@
+{
+  "method": "label-and-character-IoU-0.5-one-to-one",
+  "documents": [
+    {
+      "document": "PcquoteComInc_19990721_S-1A_EX-10.11_6377149_EX-10.11_Co-Branding Agreement2",
+      "status": "ok",
+      "counts": {
+        "tp": 0,
+        "fp": 1,
+        "fn": 7
+      }
+    }
+  ],
+  "measured": 1,
+  "not_run": 0,
+  "micro": {
+    "tp": 0,
+    "fp": 1,
+    "fn": 7,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0
+  },
+  "dataset": {
+    "revision": "67faa0e6023b04fcaae6cc09497ab00e5d63a2a2",
+    "archive_sha256": "f8161d18bea4e9c05e78fa6dda61c19c846fb8087ea969c172753bc2f45b999a",
+    "split": "test",
+    "test_documents": 102,
+    "eligible_documents": 88,
+    "excluded_by_length_or_structure": 14,
+    "max_chars": 100000,
+    "selected_documents": [
+      "PcquoteComInc_19990721_S-1A_EX-10.11_6377149_EX-10.11_Co-Branding Agreement2"
+    ],
+    "seed": 42,
+    "questions_per_doc": 0,
+    "document_limit": 1
+  },
+  "predictions_sha256": "8cc7e2f02b7d7d7c2bd92886fdc65fca1790ab8df9a353b51e8e19a49b875894"
+}

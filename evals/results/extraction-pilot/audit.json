@@ -1,0 +1,64 @@
+{
+  "doc_id": "115c1019-2328-4dd0-8b62-52324fbbdbaf",
+  "contract_type": "license",
+  "checklist": [
+    "grant and scope",
+    "assignment",
+    "duration",
+    "IP ownership",
+    "liability",
+    "exit rights"
+  ],
+  "clauses": [
+    {
+      "type": "Effective Date",
+      "quoted_text": "This amendment to Section 2 (titled \"Term\"), Part B of the Co-Branding Agreement is made effective December 9, 1996 by and between PC Quote, Inc. (hereinafter referred to as \"PCQ\") and A.B. Watley, Inc. (hereinafter referred to as \"ABW\"), who are also the parties contracted in the aforementioned Co-Branding Agreement. This Amendment shall apply to said PCQ and ABW and all of their subsidiaries and related companies.",
+      "chunk_id": "c00000",
+      "party": "PC Quote, Inc. and A.B. Watley, Inc.",
+      "confidence": 0.9,
+      "id": "clause-1",
+      "location": {
+        "chunk_id": "c00000",
+        "page": 1,
+        "section_id": "unsectioned",
+        "start": 69,
+        "end": 488,
+        "page_start": 69,
+        "page_end": 488,
+        "ocr": false
+      },
+      "risk": {
+        "level": "low",
+        "score": 20,
+        "why": "No elevated trigger in this limited rubric; low priority does not mean the provision is safe or complete.",
+        "rubric_id": "review-priority-v1:baseline"
+      },
+      "redline": null
+    }
+  ],
+  "overall_risk": {
+    "level": "low",
+    "score": 20,
+    "why": "Maximum priority among extracted, source-located clauses; counts and coverage must be reviewed separately. Missing clauses never count as safe.",
+    "rubric_id": "review-priority-v1:maximum"
+  },
+  "summary": "Located 1 CUAD-labelled passages after processing all 1 chunks. Review priorities: 0 high, 0 medium, 1 low. Dropped 0 unsupported quotations. This is not a completeness or legal-compliance finding.",
+  "dropped_claims": 0,
+  "analyzed_chunks": 1,
+  "total_chunks": 1,
+  "rule_checks": [],
+  "warnings": [
+    "CUAD covers commercial-contract labels; it is not a complete lease checklist.",
+    "Quotation locations are verified; type, party and confidence remain model judgments, not calibrated facts.",
+    "Risk is a deterministic review-priority rubric, not a prediction of loss or enforceability.",
+    "PII detection can miss entities. Use sample documents until ownership controls are implemented."
+  ],
+  "steps": [
+    "classify",
+    "checklist",
+    "extract",
+    "verify",
+    "summarize"
+  ],
+  "disclaimer": "Informational only, not legal advice. Verify findings against the contract with a qualified professional."
+}

@@ -23,3 +23,7 @@ data/
 model-cache/
 .phase0-delivery/
 .phase1-delivery/
+.phase2-delivery/
+evals/.cache/
+evals/private/
+evals/runs/
