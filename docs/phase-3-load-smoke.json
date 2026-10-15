@@ -1,0 +1,54 @@
+{
+  "synthetic": true,
+  "provider_calls": false,
+  "results": [
+    {
+      "method": "POST",
+      "name": "/upload",
+      "requests": 2,
+      "failures": 0,
+      "mean_ms": 433.1611000234261,
+      "p95_ms": 480
+    },
+    {
+      "method": "GET",
+      "name": "/ingestion/:id",
+      "requests": 4,
+      "failures": 0,
+      "mean_ms": 146.16522500000428,
+      "p95_ms": 230
+    },
+    {
+      "method": "GET",
+      "name": "/document/:id",
+      "requests": 25,
+      "failures": 0,
+      "mean_ms": 114.26029600901529,
+      "p95_ms": 390
+    },
+    {
+      "method": "GET",
+      "name": "/document/:id/source",
+      "requests": 1,
+      "failures": 0,
+      "mean_ms": 84.98049998888746,
+      "p95_ms": 85
+    },
+    {
+      "method": "DELETE",
+      "name": "/document/:id",
+      "requests": 2,
+      "failures": 0,
+      "mean_ms": 345.36295002908446,
+      "p95_ms": 360
+    },
+    {
+      "method": "",
+      "name": "Aggregated",
+      "requests": 34,
+      "failures": 0,
+      "mean_ms": 149.505791185862,
+      "p95_ms": 410
+    }
+  ]
+}

@@ -2,12 +2,12 @@
 
 Explore property contracts through source-backed Q&A and a benefits/obligations scorecard. **Informational only, not legal advice.** Check findings against the original agreement and consult a qualified professional before making decisions.
 
-Phase 1 adds core AI workflows to the tested foundations. This is a bounded, single-worker prototype. Authentication and per-user isolation are planned for Phase 3. Anyone holding a document ID can read its text/original PDF, query it, analyze it, or delete it. Use non-sensitive sample documents for a public demo.
+Phase 3 adds Supabase sign-in, server-enforced account isolation, Postgres/pgvector, private S3/R2 storage, Redis/RQ ingestion, shared rate limits/cache, provider fallback and opt-in telemetry. See the [production setup, architecture and verification checklist](docs/phase-3.md). The default `APP_MODE=local` remains an unauthenticated development/evaluation mode: anyone holding a document ID can access it. Use production mode for shared deployments.
 
-## Functionality through Phase 1
+## Functionality
 
 - Upload PDF, DOCX, UTF-8 TXT/MD or paste text. Default limits: 2 MiB, 60 PDF pages, 100,000 extracted characters, 120 chunks, 20 retained documents.
-- Clause-aware splitting with section/page/character offsets and recursive fallback (1,000 characters / 150 overlap), local ONNX FastEmbed `sentence-transformers/all-MiniLM-L6-v2`, per-document persisted Chroma with cosine distance.
+- Clause-aware splitting with section/page/character offsets and recursive fallback (1,000 characters / 150 overlap), local ONNX FastEmbed `sentence-transformers/all-MiniLM-L6-v2`, and cosine retrieval from Postgres/pgvector in production or Chroma in local mode.
 - Configurable dense, BM25+dense/RRF, or hybrid+ONNX cross-encoder retrieval (default). Four final excerpts feed Groq `openai/gpt-oss-20b`. REST/audits use strict structured output; SSE chat uses JSON-object mode with Pydantic/citation validation, clearly marked drafts and a validated final response.
 - Benefits analysis maps **every** chunk in bounded batches, checks quoted evidence, then deterministically merges duplicate party/kind/quotation findings. No keyword/top-five sampling or lossy LLM reduction. A failed batch fails the whole request; partial results are never reported as complete.
 - All parties and benefits remain visible. Benefit significance scores (1–10) are model-generated and uncalibrated. The separate audit provides an explicit review-priority rubric; neither score measures fairness or enforceability.
@@ -16,7 +16,9 @@ Phase 1 adds core AI workflows to the tested foundations. This is a bounded, sin
 - Byte/type/size validation, archive expansion checks, limits before multipart parsing, explicit CORS origins, generated request IDs, bounded rate limits, sanitized errors, periodic document expiry/deletion.
 - Components/hooks/lib, a runtime-validated typed API client, and metadata-only history with migration that removes old stored contract text and obsolete API keys.
 
-## Architecture
+## Local-mode architecture
+
+The production architecture uses authenticated browser requests, Postgres, S3/R2 and a separate RQ worker; see the [Phase 3 diagram](docs/phase-3.md).
 
 ```mermaid
 flowchart LR
@@ -39,9 +41,9 @@ flowchart LR
   T[TTL sweep + explicit DELETE] --> D
 ```
 
-The UI uploads once to FastAPI. `/api/extract` remains a standalone text-extraction fallback, not an alternative AI backend. Its output is never saved to browser storage by the app.
+The UI uploads once to FastAPI and polls queued ingestion in production. `/api/extract` remains a standalone local-mode text-extraction fallback; it is disabled when frontend authentication is configured.
 
-## Local setup
+## Local development setup
 
 Use Node 22 and Python 3.12 (the Docker/CI version).
 
@@ -87,6 +89,10 @@ Phase 2 provides measured retrieval results and a small live-provider pilot; see
 
 ## Privacy and retention
 
+In production, all original upload types are retained in private S3/R2 and extracted records/vectors in Postgres until TTL or deletion. Access is owner-filtered, including cached retrieval and source downloads. Delete tombstones access before physical cleanup; expired documents are inaccessible even when cleanup is delayed. Short signed PDF URLs remain bearer capabilities until expiry; object versions, backups and downloaded copies need separate retention controls. Browser history is account-scoped metadata, sessions are in memory, and optional fallback sends redacted excerpts to the configured second provider. Optional Langfuse/Sentry export allowlisted metadata, not contract text. See [Phase 3 retention details](docs/phase-3.md).
+
+The following filesystem behavior applies to `APP_MODE=local`:
+
 1. Upload bodies are bounded and parsed transiently; framework spools close after processing. Original PDFs are now retained for the source viewer; original DOCX/TXT files are not. OS temporary data can survive abrupt process/host crashes.
 2. Canonical page text, OCR boxes and chunks/metadata persist in `DATA_DIR/documents/<uuid>/document.json`; original PDFs in `source.pdf`; embeddings in `vectors/`. **This is disk persistence, not zero persistence.** Default TTL: one hour from indexing start, including across restarts if the disk survives. All three are inside the same deletion boundary.
 3. Expired IDs are rejected immediately. A startup sweep and a 60-second periodic sweep remove the entire directory. Explicit deletion removes access before unlinking files. Failed filesystem deletion is logged without content and retried; explicit DELETE does not claim success while removal is pending. Cleanup cannot run on a suspended/stopped host and resumes on startup. Deletion is not forensic secure erasure and does not control host backups.
@@ -98,6 +104,8 @@ Delete-all removes server documents represented by the last 10 remembered entrie
 
 ## Render + Vercel deployment
 
+For an authenticated shared service, follow the [Phase 3 deployment steps](docs/phase-3.md): add managed Postgres/pgvector, Redis, a private bucket and an RQ worker; run the migration; configure Supabase in both API and frontend. The full infrastructure/model stack is not certified for a free/512 MiB tier. The instructions below describe the retained local-mode demo deployment.
+
 Keep the two-service deployment. On Render use Docker with context `contractiq-backend` or the existing blueprint, set `GROQ_API_KEY`, and set `CORS_ORIGINS` to the exact frontend origin. Add preview origins individually; wildcard subdomains are rejected. Set Vercel's `NEXT_PUBLIC_RAG_API_URL` to the backend HTTPS URL. Keys belong only on the backend. Deploy frontend and backend together because `/benefits` now returns structured `items` instead of a JSON string.
 
 Docker preloads the embedding/reranker models, installs the small NER model and Tesseract English, and starts one worker. `/health` is liveness only, not provider/model readiness. Configure Uvicorn proxy trust only for known proxy addresses; do not set `FORWARDED_ALLOW_IPS=*` on an exposed origin. Until trusted proxy addresses are configured, clients behind the same proxy may share a rate-limit bucket. CORS does not authenticate non-browser clients.
@@ -108,7 +116,7 @@ Whole-document analysis can exceed free provider quotas or the 240-second budget
 
 ## Limitations and future phases
 
-- No auth, per-user isolation, distributed limiter, queue, cloud storage or multi-worker support yet. Next.js extraction uses a global per-instance budget, not a distributed Vercel limiter.
+- Production features require correctly configured external services. Local mode remains unauthenticated. Inference admission is per API process, not a global distributed concurrency budget. Hosted identity, bucket policy, telemetry dashboards and a real second provider require deployment checks documented in [Phase 3 verification](docs/phase-3-verification.md).
 - Format checks are not antivirus or a full parser sandbox. PDFs/OCR can still be resource-intensive. Backend DOCX extraction reads main paragraphs/tables, not separate footnotes/headers/text boxes.
 - Supported quotations and citation IDs cannot establish truth or correct legal interpretation. Coverage counts processed chunks, not extraction recall. Case/whitespace-normalized exact dedupe can retain paraphrases and party aliases.
 - PDF highlights depend on matching text-layer order or OCR word boxes; unmatched PDF passages fall back visibly to canonical extracted text. Character offsets describe extraction, not the original PDF's byte layout.
@@ -120,4 +128,4 @@ See [Phase 1 implementation and manual checklist](docs/phase-1.md) for API contr
 
 Phase 2 adds a pinned CUAD test subset and forty authored synthetic Q&A cases. Run `make eval` with the Python environment active, or `python -m evals.prepare` followed by `python -m evals.run` where Make is unavailable. The default run makes no LLM calls; generator/judge evaluation requires explicit `--online`. It compares recursive/clause-aware chunking with dense, hybrid and hybrid-plus-reranker retrieval, returning Hit@4, MRR@4 and span Recall@4. Provider-dependent scores remain null when not run.
 
-Read the [evaluation guide](evals/README.md), [measured results](evals/results/phase-2-retrieval/results.md), [machine-readable evidence](evals/results/phase-2-retrieval/results.json), [live pilot and verification](docs/phase-2-verification.md) and [Phase 2 checklist](docs/phase-2.md). These are bounded development results, not a full CUAD benchmark, legal-correctness assessment or production resource measurement. Phase 3 starts only on request.
+Read the [evaluation guide](evals/README.md), [measured results](evals/results/phase-2-retrieval/results.md), [machine-readable evidence](evals/results/phase-2-retrieval/results.json), [live pilot and verification](docs/phase-2-verification.md) and [Phase 2 checklist](docs/phase-2.md). These are bounded development results, not a full CUAD benchmark, legal-correctness assessment or production resource measurement. Phase 4 starts only on request.

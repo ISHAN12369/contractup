@@ -8,6 +8,7 @@ from typing import Protocol
 
 from config import Settings
 from errors import ServiceError
+from postgres_store import PostgresStore
 from schemas import Chunk
 from storage import DocumentStore
 
@@ -72,7 +73,7 @@ class Hit:
 
 
 class Retriever:
-    def __init__(self, settings: Settings, store: DocumentStore, reranker: Reranker | None = None):
+    def __init__(self, settings: Settings, store: DocumentStore | PostgresStore, reranker: Reranker | None = None):
         self.settings, self.store = settings, store
         self.reranker = reranker or OnnxReranker(settings)
 

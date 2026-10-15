@@ -14,4 +14,8 @@ select = ["E4", "E7", "E9", "F", "I", "B", "UP"]
 python_version = "3.12"
 strict = true
 ignore_missing_imports = true
-files = ["config.py", "errors.py", "schemas.py", "parsing.py", "llm.py", "storage.py", "rag_pipeline.py", "security.py", "main.py", "audit_schemas.py", "audit.py", "chunking.py", "locations.py", "ocr.py", "privacy.py", "retrieval.py", "risk.py", "india_rules.py", "comparison.py", "streaming.py"]
+files = ["config.py", "errors.py", "schemas.py", "parsing.py", "llm.py", "storage.py", "rag_pipeline.py", "security.py", "main.py", "audit_schemas.py", "audit.py", "chunking.py", "locations.py", "ocr.py", "privacy.py", "retrieval.py", "risk.py", "india_rules.py", "comparison.py", "streaming.py", "auth.py", "redis_services.py", "object_store.py", "postgres_store.py", "ingestion.py", "migrate.py", "bootstrap.py", "telemetry.py", "providers.py", "prompt_safety.py"]
+
+[[tool.mypy.overrides]]
+module = ["redis.*", "psycopg.*", "jwt.*", "langfuse.*", "sentry_sdk.*"]
+follow_imports = "skip"

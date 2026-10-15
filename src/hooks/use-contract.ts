@@ -6,7 +6,9 @@ import { BenefitsResult, Message, StoredDocument } from '@/lib/contracts';
 import { loadHistory, saveHistory } from '@/lib/history';
 import { Audit, Comparison, IndiaContext } from '@/lib/audit-contracts';
 
-export function useContract() {
+export function useContract(account = 'local') {
+  const readHistory = useCallback(() => loadHistory(localStorage, Date.now(), account), [account]);
+  const [uploadStatus, setUploadStatus] = useState('');
   const [document, setDocument] = useState<StoredDocument | null>(null);
   const [history, setHistory] = useState<StoredDocument[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -20,12 +22,12 @@ export function useContract() {
   const generation = useRef(0);
   const pending = useRef(false);
 
-  useEffect(() => { setHistory(loadHistory()); }, []);
+  useEffect(() => { setHistory(readHistory()); }, [readHistory]);
 
   const remember = useCallback((docs: StoredDocument[]) => {
-    saveHistory(docs);
+    saveHistory(docs, localStorage, Date.now(), account);
     setHistory(docs);
-  }, []);
+  }, [account]);
 
   const reset = useCallback(() => {
     generation.current += 1;
@@ -35,17 +37,17 @@ export function useContract() {
     setDocument(null); setMessages([]); setBenefits(null); setBusy(null); setError('');
   }, []);
 
-  useEffect(() => () => streamController.current?.abort(), []);
+  useEffect(() => () => { generation.current += 1; streamController.current?.abort(); }, []);
 
   useEffect(() => {
     if (!document) return;
     const timer = setTimeout(() => {
       reset();
-      remember(loadHistory());
+      remember(readHistory());
       setError('This document has expired. Please upload it again.');
     }, Math.max(0, document.expires_at * 1000 - Date.now()));
     return () => clearTimeout(timer);
-  }, [document, remember, reset]);
+  }, [document, remember, reset, readHistory]);
 
   async function run(kind: NonNullable<typeof busy>, operation: (version: number) => Promise<void>, relatedDocId?: string): Promise<boolean> {
     if (pending.current) return false;
@@ -58,7 +60,7 @@ export function useContract() {
     } catch (failure) {
       if (generation.current === version) {
         if (failure instanceof ApiError && failure.status === 404 && document && document.doc_id === relatedDocId) {
-          remember(loadHistory().filter(item => item.doc_id !== document.doc_id));
+          remember(readHistory().filter(item => item.doc_id !== document.doc_id));
           setDocument(null); setMessages([]); setBenefits(null);
           setAudit(null); setComparison(null); setDraft('');
         }
@@ -72,10 +74,11 @@ export function useContract() {
 
   async function upload(file: File) {
     return run('upload', async version => {
-      const result = await api.upload(file);
-      // Always remember successful uploads, including one whose view was reset while indexing.
-      remember([result, ...loadHistory().filter(item => item.doc_id !== result.doc_id)].slice(0, 10));
+      setUploadStatus('Uploading…');
+      const result = await api.upload(file, status => { if (generation.current === version) setUploadStatus(status); });
       if (generation.current !== version) return;
+      remember([result, ...readHistory().filter(item => item.doc_id !== result.doc_id)].slice(0, 10));
+      setUploadStatus('');
       setDocument(result); setMessages([]); setBenefits(null);
       setAudit(null); setComparison(null);
     });
@@ -89,8 +92,8 @@ export function useContract() {
         setDocument(result); setMessages([]); setBenefits(null);
         setAudit(null); setComparison(null);
       } catch (failure) {
-        if (failure instanceof ApiError && failure.status === 404) {
-          remember(loadHistory().filter(doc => doc.doc_id !== item.doc_id));
+        if (generation.current === version && failure instanceof ApiError && failure.status === 404) {
+          remember(readHistory().filter(doc => doc.doc_id !== item.doc_id));
         }
         throw failure;
       }
@@ -100,7 +103,8 @@ export function useContract() {
   async function remove(id: string) {
     await run('history', async version => {
       await api.remove(id);
-      remember(loadHistory().filter(item => item.doc_id !== id));
+      if (generation.current !== version) return;
+      remember(readHistory().filter(item => item.doc_id !== id));
       if (document?.doc_id === id && generation.current === version) reset();
     });
   }
@@ -108,9 +112,10 @@ export function useContract() {
   async function clearHistory() {
     await run('history', async version => {
       // Forget only after server deletion succeeds, preserving a retry handle on failure.
-      for (const item of loadHistory()) {
+      for (const item of readHistory()) {
         await api.remove(item.doc_id);
-        remember(loadHistory().filter(doc => doc.doc_id !== item.doc_id));
+        if (generation.current !== version) return;
+        remember(readHistory().filter(doc => doc.doc_id !== item.doc_id));
         if (document?.doc_id === item.doc_id && generation.current === version) {
           setDocument(null); setMessages([]); setBenefits(null);
           setAudit(null); setComparison(null);
@@ -158,5 +163,5 @@ export function useContract() {
     });
   }
 
-  return { document, history, messages, benefits, audit, comparison, draft, busy, error, upload, restore, remove, clearHistory, analyze, chat, runAudit, compare, reset };
+  return { document, history, messages, benefits, audit, comparison, draft, busy, error, uploadStatus, upload, restore, remove, clearHistory, analyze, chat, runAudit, compare, reset };
 }

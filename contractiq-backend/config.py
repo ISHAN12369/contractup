@@ -1,15 +1,15 @@
-"""Validated, explicit limits for the single-worker Phase 0 service."""
+"""Validated limits and explicit local/production infrastructure configuration."""
 
 import os
 from pathlib import Path
 from typing import Literal
 from urllib.parse import urlsplit
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class Settings(BaseModel):
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, hide_input_in_errors=True)
 
     data_dir: Path = Path("data")
     model_cache_dir: Path = Path("model-cache")
@@ -41,6 +41,44 @@ class Settings(BaseModel):
     ocr_timeout_seconds: int = Field(default=20, ge=1, le=60)
     india_rule_pack: bool = True
     audit_max_clauses: int = Field(default=200, ge=1, le=600)
+    app_mode: Literal["local", "production"] = "local"
+    database_url: str = Field(default="", repr=False)
+    redis_url: str = Field(default="", repr=False)
+    supabase_url: str = ""
+    s3_endpoint: str = ""
+    s3_public_endpoint: str = ""
+    s3_bucket: str = "contractiq"
+    s3_region: str = "us-east-1"
+    s3_access_key: str = Field(default="", repr=False)
+    s3_secret_key: str = Field(default="", repr=False)
+    signed_url_seconds: int = Field(default=60, ge=1, le=300)
+    ingestion_timeout_seconds: int = Field(default=600, ge=30, le=1800)
+    cache_ttl_seconds: int = Field(default=120, ge=1, le=600)
+    fallback_api_key: str = Field(default="", repr=False)
+    fallback_base_url: str = ""
+    fallback_model: str = ""
+    fallback_structured_mode: Literal["json_schema", "json_object"] = "json_object"
+    sentry_dsn: str = Field(default="", repr=False)
+    langfuse_public_key: str = Field(default="", repr=False)
+    langfuse_secret_key: str = Field(default="", repr=False)
+    langfuse_base_url: str = "https://cloud.langfuse.com"
+    telemetry_enabled: bool = False
+
+    @model_validator(mode="after")
+    def production_configuration(self) -> "Settings":
+        if self.app_mode == "production":
+            for name in ("database_url", "redis_url", "supabase_url", "s3_endpoint", "s3_access_key", "s3_secret_key"):
+                if not getattr(self, name):
+                    raise ValueError(f"Production requires {name.upper()}")
+            if not self.supabase_url.startswith("https://"):
+                raise ValueError("Supabase must use HTTPS")
+        if any((self.fallback_api_key, self.fallback_base_url, self.fallback_model)):
+            if not all((self.fallback_api_key, self.fallback_base_url, self.fallback_model)):
+                raise ValueError("Configure all three fallback provider values")
+            parsed = urlsplit(self.fallback_base_url)
+            if parsed.scheme != "https" or not parsed.netloc or parsed.username or parsed.query or parsed.fragment:
+                raise ValueError("Fallback provider requires a trusted HTTPS base URL")
+        return self
 
     @field_validator("cors_origins")
     @classmethod

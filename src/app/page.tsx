@@ -12,9 +12,14 @@ import { AuditPanel } from '@/components/audit-panel';
 import { ComparisonPanel } from '@/components/comparison-panel';
 import { SourceViewer } from '@/components/source-viewer';
 import { SourceSelection } from '@/lib/audit-contracts';
+import { AuthGate } from '@/components/auth-gate';
 
 export default function HomePage() {
-  const contract = useContract();
+  return <AuthGate>{account => <Workspace key={account} account={account} />}</AuthGate>;
+}
+
+function Workspace({ account }: { account: string }) {
+  const contract = useContract(account);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [source, setSource] = useState<SourceSelection | null>(null);
   const closeSource = useCallback(() => setSource(null), []);
@@ -42,7 +47,7 @@ export default function HomePage() {
         <div className="z-10 mt-8"><a href="#upload" className="studio-btn">Get started <ArrowRight className="w-4 h-4" /></a></div>
         <div className="marquee-container w-full mt-12"><div className="marquee-content">CONTRACT CLARITY · BENEFITS & OBLIGATIONS · SOURCE QUOTATIONS · CONTRACT CLARITY · BENEFITS & OBLIGATIONS · SOURCE QUOTATIONS ·</div></div>
       </section>
-      <UploadPanel document={contract.document} busy={busy} onUpload={contract.upload} />
+      <UploadPanel document={contract.document} busy={busy} onUpload={contract.upload} status={contract.uploadStatus} />
       <BenefitsPanel result={contract.benefits} available={!!contract.document} busy={busy} analyzing={contract.busy === 'benefits'} onAnalyze={contract.analyze} />
       <ChatPanel messages={contract.messages} available={!!contract.document} busy={busy} sending={contract.busy === 'chat'} onSend={contract.chat} draft={contract.draft} docId={contract.document?.doc_id} onSource={setSource} />
       <AuditPanel result={contract.audit} available={!!contract.document} busy={busy} analyzing={contract.busy === 'audit'} onAnalyze={contract.runAudit} onSource={setSource} />

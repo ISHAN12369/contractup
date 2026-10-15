@@ -27,3 +27,9 @@ model-cache/
 evals/.cache/
 evals/private/
 evals/runs/
+.phase3-delivery/
+.venv-load/
+playwright-report/
+test-results/
+load/results/
+compose.env

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { benefitsSchema, chatSchema, documentSchema, Message } from './contracts';
 import { auditSchema, comparisonSchema, IndiaContext, sourceDocumentSchema } from './audit-contracts';
 import { consumeChatStream, StreamError } from './sse';
+import { authenticatedHeaders, authEpoch } from './auth-session';
 
 const BASE_URL = (process.env.NEXT_PUBLIC_RAG_API_URL || 'http://localhost:8000').replace(/\/$/, '');
 
@@ -14,8 +15,10 @@ export class ApiError extends Error {
 async function request<S extends z.ZodTypeAny>(path: string, schema: S, init: RequestInit = {}): Promise<z.output<S>> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), path === '/compare' ? 600_000 : 300_000);
+  const epoch = authEpoch();
   try {
-    const response = await fetch(`${BASE_URL}${path}`, { ...init, signal: controller.signal, cache: 'no-store' });
+    const response = await fetch(`${BASE_URL}${path}`, { ...init, headers: await authenticatedHeaders(init.headers), signal: controller.signal, cache: 'no-store' });
+    if (epoch !== authEpoch()) throw new ApiError('Your session changed. Please retry.', 401);
     const requestId = response.headers.get('X-Request-ID') || undefined;
     const data: unknown = await response.json().catch(() => null);
     if (!response.ok) {
@@ -40,11 +43,25 @@ function json(value: unknown): RequestInit {
   return { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(value) };
 }
 
+const ingestionSchema = z.object({ doc_id: z.string().uuid(), status: z.enum(['uploading', 'queued', 'processing', 'ready', 'failed']), document: documentSchema.optional(), detail: z.string().optional() });
+
 export const api = {
-  upload(file: File) {
+  async upload(file: File, onStatus?: (status: string) => void) {
     const body = new FormData();
     body.append('file', file);
-    return request('/upload', documentSchema, { method: 'POST', body });
+    const epoch = authEpoch();
+    const result = await request('/upload', z.union([documentSchema, ingestionSchema]), { method: 'POST', body });
+    if (!('status' in result)) return result;
+    const deadline = Date.now() + 12 * 60_000;
+    while (Date.now() < deadline) {
+      if (authEpoch() !== epoch) throw new ApiError('Your session changed. Please retry.', 401);
+      const progress = await request(`/ingestion/${encodeURIComponent(result.doc_id)}`, ingestionSchema);
+      if (progress.status === 'ready' && progress.document) return progress.document;
+      if (progress.status === 'failed') throw new ApiError(progress.detail || 'Document processing failed. Please retry.', 422);
+      onStatus?.(progress.status === 'processing' ? 'Reading and indexing your document…' : 'Waiting for a processing slot…');
+      await new Promise(resolve => setTimeout(resolve, 3000));
+    }
+    throw new ApiError(`Processing has not finished. Document ID: ${result.doc_id}. Please retry later.`, 504);
   },
   document(id: string) { return request(`/document/${encodeURIComponent(id)}`, documentSchema); },
   remove(id: string) {
@@ -55,7 +72,9 @@ export const api = {
   compare(beforeId: string, afterId: string) { return request('/compare', comparisonSchema, json({ before_id: beforeId, after_id: afterId })); },
   source(id: string) { return request(`/document/${encodeURIComponent(id)}/source`, sourceDocumentSchema); },
   async pdf(id: string, signal: AbortSignal): Promise<Uint8Array> {
-    const response = await fetch(`${BASE_URL}/document/${encodeURIComponent(id)}/file`, { signal, cache: 'no-store' });
+    const epoch = authEpoch();
+    const response = await fetch(`${BASE_URL}/document/${encodeURIComponent(id)}/file`, { signal, headers: await authenticatedHeaders(), cache: 'no-store' });
+    if (epoch !== authEpoch()) throw new ApiError('Your session changed.', 401);
     if (!response.ok) throw new ApiError('The original PDF is unavailable or expired.', response.status);
     return new Uint8Array(await response.arrayBuffer());
   },
@@ -67,10 +86,12 @@ export const api = {
       if (streaming.signal.aborted) controller.abort();
       const timeout = setTimeout(abort, 300_000);
       try {
+        const epoch = authEpoch();
         const response = await fetch(`${BASE_URL}/chat/stream`, {
           ...json({ doc_id: id, question, history: messages.slice(-6).map(({ role, content }) => ({ role, content })) }),
-          signal: controller.signal, cache: 'no-store',
+          headers: await authenticatedHeaders({ 'Content-Type': 'application/json' }), signal: controller.signal, cache: 'no-store',
         });
+        if (epoch !== authEpoch()) throw new ApiError('Your session changed.', 401);
         if (!response.ok || !response.body) throw new ApiError('The streamed request could not start.', response.status, response.headers.get('X-Request-ID') || undefined);
         return await consumeChatStream(response.body, streaming.onDraft);
       } catch (error) {

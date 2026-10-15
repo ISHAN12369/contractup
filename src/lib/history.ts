@@ -10,19 +10,19 @@ function metadataOnly(docs: unknown[], now: number): StoredDocument[] {
   }).slice(0, 10);
 }
 
-export function saveHistory(docs: StoredDocument[], storage: Storage = localStorage, now = Date.now()): void {
+export function saveHistory(docs: StoredDocument[], storage: Storage = localStorage, now = Date.now(), account = 'local'): void {
   try {
     // Parsing strips unknown properties: callers cannot accidentally persist text, previews or keys.
-    storage.setItem(HISTORY_KEY, JSON.stringify(metadataOnly(docs, now)));
+    storage.setItem(account === 'local' ? HISTORY_KEY : `${HISTORY_KEY}:${account}`, JSON.stringify(metadataOnly(docs, now)));
   } catch { /* A blocked/quota-limited storage must not prevent using an in-memory document. */ }
 }
 
-export function loadHistory(storage: Storage = localStorage, now = Date.now()): StoredDocument[] {
+export function loadHistory(storage: Storage = localStorage, now = Date.now(), account = 'local'): StoredDocument[] {
   try {
     LEGACY_KEYS.forEach(key => storage.removeItem(key));
-    const raw: unknown = JSON.parse(storage.getItem(HISTORY_KEY) || '[]');
+    const raw: unknown = JSON.parse(storage.getItem(account === 'local' ? HISTORY_KEY : `${HISTORY_KEY}:${account}`) || '[]');
     const docs = metadataOnly(Array.isArray(raw) ? raw : [], now);
-    saveHistory(docs, storage, now);
+    saveHistory(docs, storage, now, account);
     return docs;
   } catch { return []; }
 }

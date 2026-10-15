@@ -1,0 +1,16 @@
+# Only frontend source/configuration belongs in this image.
+**
+!Dockerfile
+!.dockerignore
+!package.json
+!package-lock.json
+!next.config.js
+!next-env.d.ts
+!tsconfig.json
+!tailwind.config.js
+!postcss.config.js
+!.eslintrc.json
+!src
+!src/**
+!public
+!public/**

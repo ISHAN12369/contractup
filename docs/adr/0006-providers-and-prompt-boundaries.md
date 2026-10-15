@@ -1,0 +1,9 @@
+# ADR 0006: Bounded provider fallback and untrusted evidence
+
+Status: accepted for Phase 3, 12 October 2026.
+
+Keep Groq as primary and make the second provider an explicitly configured HTTPS chat-completions-compatible endpoint/model/key. No second-provider account, model or price is guessed. All fallback values must be supplied together. Providers share structured schema validation, citation/quotation checks, redaction and the operation deadline. When fallback exists, the primary gets at most half the remaining budget. 429/5xx responses have bounded retry/backoff; validation failures also consume the bounded attempt budget. A failed stream may switch only before yielding any content, preventing mixed-provider partial answers. A stream already in progress fails explicitly. Missing provider usage stays unknown, never zero-priced by assumption.
+
+Evidence, questions and history are encoded as JSON inside a dedicated untrusted-data delimiter. Angle brackets in JSON strings are escaped so source content cannot close the delimiter. System instructions forbid obeying document instructions. Outputs must pass Pydantic limits and source checks; the frontend displays text through React, never raw HTML. These measures reduce injection impact but do not prove immunity or establish legal truth. The system exposes no model-controlled tools for fetching arbitrary URLs, executing code, accessing credentials or writing files. There is no blanket content filter that would discard legitimate quoted clauses.
+
+Fallback increases availability but may send the same redacted excerpts to a second vendor and incur additional charges. Enable it only after configuring that vendor's retention policy, supported JSON mode and real account limits. Mocked fallback tests establish protocol/error handling, not model compatibility or answer quality.

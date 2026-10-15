@@ -25,7 +25,7 @@ def test_map_visits_every_chunk_including_late_clauses(service):
 
     def provider(request):
         payload = json.loads(request.content)
-        batch = json.loads(payload["messages"][1]["content"].split("evidence:\n", 1)[1])
+        batch = json.loads(payload["messages"][1]["content"].split("<untrusted_contract_data>\n", 1)[1].split("\n</untrusted_contract_data>", 1)[0])
         visited.extend(chunk["id"] for chunk in batch)
         return completion({"items": [finding(
             clause=chunk["text"].split(". ")[0] + ".", chunk_ids=[chunk["id"]],
@@ -123,8 +123,10 @@ def test_partial_map_failure_never_returns_partial_analysis(service):
         return completion({"items": []}) if len(calls) == 1 else httpx.Response(503)
 
     service.llm = GroqLLM(service.settings, httpx.Client(transport=httpx.MockTransport(provider)))
-    with pytest.raises(ModelFailure):
+    with pytest.raises(ServiceError) as error:
         service.analyze_benefits(str(metadata.doc_id))
+    assert error.value.status == 503
+    assert len(calls) == 1 + service.settings.structured_retries + 1
 
 
 def test_schema_rejects_out_of_range_scores_and_extra_keys():

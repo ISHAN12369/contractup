@@ -8,9 +8,10 @@ interface Props {
   document: StoredDocument | null;
   busy: boolean;
   onUpload: (file: File) => Promise<boolean>;
+  status?: string;
 }
 
-export function UploadPanel({ document, busy, onUpload }: Props) {
+export function UploadPanel({ document, busy, onUpload, status }: Props) {
   const input = useRef<HTMLInputElement>(null);
   const [paste, setPaste] = useState('');
   const [dragging, setDragging] = useState(false);
@@ -40,10 +41,10 @@ export function UploadPanel({ document, busy, onUpload }: Props) {
           }}
           className={`w-full border-2 border-dashed p-12 text-center transition-colors ${dragging ? 'border-coral bg-black/10' : 'border-current/30'}`}>
           {busy ? <Loader2 className="w-10 h-10 mx-auto mb-4 animate-spin" /> : <Upload className="w-10 h-10 mx-auto mb-4" />}
-          <span className="block font-semibold">{busy ? 'Processing…' : 'Drop a contract or choose a file'}</span>
+          <span className="block font-semibold" role="status">{busy ? (status || 'Processing…') : 'Drop a contract or choose a file'}</span>
           <span className="block text-xs mt-3">PDF, DOCX, TXT, MD · default limit 2 MiB</span>
         </button>
-        <p className="text-xs leading-relaxed mt-4 opacity-75">PDFs, extracted text and vectors are retained until the backend expiry/cleanup. Local PII detection redacts detected entities before Groq analysis; it can miss information. Browser history saves only document IDs and metadata.</p>
+        <p className="text-xs leading-relaxed mt-4 opacity-75">Uploads, extracted text and vectors are retained until expiry or deletion. Local PII detection redacts detected entities before provider analysis; it can miss information. Browser history saves only document IDs and metadata.</p>
       </div>
       <div>
         <label htmlFor="paste-contract" className="block text-xs font-bold uppercase tracking-wider mb-3">Or paste contract text</label>

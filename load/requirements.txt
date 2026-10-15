@@ -1,0 +1,2 @@
+-c constraints.txt
+locust==2.46.7

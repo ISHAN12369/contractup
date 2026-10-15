@@ -29,15 +29,27 @@ class StructuredLLM(Protocol):
 
 
 class GroqLLM:
-    def __init__(self, settings: Settings, client: httpx.Client | None = None):
+    def __init__(self, settings: Settings, client: httpx.Client | None = None, *,
+                 base_url: str = "https://api.groq.com/openai/v1", name: str = "groq"):
         self.settings = settings
         self.client = client or httpx.Client()
+        self.endpoint = base_url.rstrip("/") + "/chat/completions"
+        self.name = name
+        self.usage: dict[str, int] = {}
+
+    def record_usage(self, payload: object) -> None:
+        if isinstance(payload, dict):
+            for external, local in (("prompt_tokens", "input"), ("completion_tokens", "output")):
+                count = payload.get(external)
+                if isinstance(count, int) and count >= 0:
+                    self.usage[local] = self.usage.get(local, 0) + count
 
     def close(self) -> None:
         self.client.close()
 
     def stream_json(self, schema: type[BaseModel], prompt: str, *, deadline: float, cancelled: Event) -> Iterator[str]:
         """Groq JSON-object streaming; strict JSON-schema mode does not support streaming."""
+        self.usage = {}
         if not self.settings.groq_api_key:
             raise ServiceError(503, "The analysis provider is not configured.")
         remaining = deadline - time.monotonic()
@@ -45,7 +57,7 @@ class GroqLLM:
             raise ServiceError(504, "Analysis exceeded its time budget.")
         try:
             with self.client.stream(
-                "POST", "https://api.groq.com/openai/v1/chat/completions",
+                "POST", self.endpoint,
                 headers={"Authorization": f"Bearer {self.settings.groq_api_key}"},
                 json={
                     "model": self.settings.groq_model, "temperature": 0,
@@ -73,6 +85,7 @@ class GroqLLM:
                     if value == "[DONE]":
                         break
                     payload = json.loads(value)
+                    self.record_usage(payload.get("usage") or payload.get("x_groq", {}).get("usage"))
                     for choice in payload.get("choices", []):
                         reason = choice.get("finish_reason")
                         if reason is not None:
@@ -99,6 +112,7 @@ class GroqLLM:
         self, schema: type[T], prompt: str, *, deadline: float,
         validate: Callable[[T], None] | None = None,
     ) -> T:
+        self.usage = {}
         if not self.settings.groq_api_key:
             raise ServiceError(503, "The analysis provider is not configured.")
         json_schema = schema.model_json_schema()
@@ -117,7 +131,7 @@ class GroqLLM:
             )
             try:
                 response = self.client.post(
-                    "https://api.groq.com/openai/v1/chat/completions",
+                    self.endpoint,
                     headers={"Authorization": f"Bearer {self.settings.groq_api_key}"},
                     json={
                         "model": self.settings.groq_model,
@@ -131,9 +145,17 @@ class GroqLLM:
                     },
                     timeout=min(remaining, self.settings.llm_timeout_seconds),
                 )
-                if response.status_code == 429:
-                    raise ServiceError(503, "The analysis provider is rate limited. Please try later.")
+                if response.status_code == 429 or response.status_code >= 500:
+                    try:
+                        delay = min(2.0, max(0.1, float(response.headers.get("retry-after", "0.5"))))
+                    except ValueError:
+                        delay = 0.5
+                    if attempt < self.settings.structured_retries and deadline - time.monotonic() > delay + 0.1:
+                        time.sleep(delay)
+                        continue
+                    raise ServiceError(503, "The analysis provider is unavailable or rate limited. Please try later.")
                 response.raise_for_status()
+                self.record_usage(response.json().get("usage"))
                 choice = response.json()["choices"][0]
                 if choice.get("finish_reason") != "stop" or choice["message"].get("refusal"):
                     raise ValueError("Incomplete or refused completion")

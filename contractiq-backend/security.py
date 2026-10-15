@@ -1,13 +1,21 @@
 """ASGI guard runs before multipart parsing; rejects oversized streamed bodies."""
 
+import logging
+import re
 import time
 from collections.abc import Callable
 from uuid import uuid4
 
+from starlette.concurrency import run_in_threadpool
 from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 from config import Settings
+from errors import ServiceError
+from redis_services import RedisLimiter
+from telemetry import current_request_id
+
+logger = logging.getLogger(__name__)
 
 
 class RateLimiter:
@@ -26,19 +34,25 @@ class RateLimiter:
 
 
 class SecurityMiddleware:
-    def __init__(self, app: ASGIApp, settings: Settings):
+    def __init__(self, app: ASGIApp, settings: Settings, limiter: RedisLimiter | None = None):
         self.app, self.settings = app, settings
-        self.limiter = RateLimiter(settings.rate_limit_requests, settings.rate_limit_window_seconds)
+        self.limiter = limiter or RateLimiter(settings.rate_limit_requests, settings.rate_limit_window_seconds)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if scope["type"] != "http":
             await self.app(scope, receive, send)
             return
         request_id = str(uuid4())
+        started = time.monotonic()
         scope.setdefault("state", {})["request_id"] = request_id
 
         async def tagged_send(message: Message) -> None:
             if message["type"] == "http.response.start":
+                route = re.sub(r"[0-9a-fA-F-]{36}", ":id", scope["path"])
+                if route not in {"/health", "/ready", "/upload", "/chat", "/chat/stream", "/audit", "/compare", "/benefits", "/document/:id", "/document/:id/source", "/document/:id/file", "/document/:id/download", "/ingestion/:id"}:
+                    route = "other"
+                logger.info("request_completed", extra={"request_id": request_id, "route": route,
+                    "status": message["status"], "duration_ms": round((time.monotonic() - started) * 1000, 2)})
                 headers = list(message.get("headers", []))
                 headers.extend([
                     (b"x-request-id", request_id.encode()),
@@ -68,9 +82,15 @@ class SecurityMiddleware:
         if origin and origin not in self.settings.cors_origins:
             await reject(403, "Origin is not allowed.")
             return
-        if scope["path"] != "/health" and scope["method"] != "OPTIONS":
+        if scope["path"] not in {"/health", "/ready"} and scope["method"] != "OPTIONS":
             peer = scope.get("client")
-            if not self.limiter.allow(peer[0] if peer else "unknown"):
+            key = "ip:" + (peer[0] if peer else "unknown")
+            try:
+                allowed = await run_in_threadpool(self.limiter.allow, key) if isinstance(self.limiter, RedisLimiter) else self.limiter.allow(key)
+            except ServiceError as exc:
+                await reject(exc.status, exc.message)
+                return
+            if not allowed:
                 await reject(429, "Too many requests. Please try later.", retry=True)
                 return
         limit = self.settings.max_upload_bytes + 65536 if scope["path"] == "/upload" else 65536
@@ -102,4 +122,8 @@ class SecurityMiddleware:
             delivered = True
             return {"type": "http.request", "body": bytes(body), "more_body": False}
 
-        await self.app(scope, replay, tagged_send)
+        token = current_request_id.set(request_id)
+        try:
+            await self.app(scope, replay, tagged_send)
+        finally:
+            current_request_id.reset(token)
