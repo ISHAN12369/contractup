@@ -13,6 +13,8 @@ import { ComparisonPanel } from '@/components/comparison-panel';
 import { SourceViewer } from '@/components/source-viewer';
 import { SourceSelection } from '@/lib/audit-contracts';
 import { AuthGate } from '@/components/auth-gate';
+import { DocumentWorkspace } from '@/components/document-workspace';
+import { ReportActions } from '@/components/report-actions';
 
 export default function HomePage() {
   return <AuthGate>{account => <Workspace key={account} account={account} />}</AuthGate>;
@@ -28,7 +30,7 @@ function Workspace({ account }: { account: string }) {
     <aside className="studio-sidebar">
       <a href="#intro" className="studio-logo" onClick={() => { contract.reset(); setSource(null); }} aria-label="ContractIQ home">IQ</a>
       <nav className="studio-nav-links" aria-label="Main navigation">
-        {['intro', 'upload', 'benefits', 'chat', 'audit', 'compare'].map(section => <a key={section} href={`#${section}`} className="studio-nav-item">{section}</a>)}
+        {['intro', 'upload', 'workspace', 'benefits', 'chat', 'audit', 'compare'].map(section => <a key={section} href={`#${section}`} className="studio-nav-item">{section}</a>)}
       </nav>
       <button aria-label="Open history" onClick={() => setHistoryOpen(true)}><History className="w-5 h-5 text-coral" /></button>
     </aside>
@@ -48,9 +50,11 @@ function Workspace({ account }: { account: string }) {
         <div className="marquee-container w-full mt-12"><div className="marquee-content">CONTRACT CLARITY · BENEFITS & OBLIGATIONS · SOURCE QUOTATIONS · CONTRACT CLARITY · BENEFITS & OBLIGATIONS · SOURCE QUOTATIONS ·</div></div>
       </section>
       <UploadPanel document={contract.document} busy={busy} onUpload={contract.upload} status={contract.uploadStatus} />
+      <DocumentWorkspace revision={contract.history.map(doc => doc.doc_id).join(',')} onOpen={contract.restore} onSource={setSource} />
       <BenefitsPanel result={contract.benefits} available={!!contract.document} busy={busy} analyzing={contract.busy === 'benefits'} onAnalyze={contract.analyze} />
       <ChatPanel messages={contract.messages} available={!!contract.document} busy={busy} sending={contract.busy === 'chat'} onSend={contract.chat} draft={contract.draft} docId={contract.document?.doc_id} onSource={setSource} />
       <AuditPanel result={contract.audit} available={!!contract.document} busy={busy} analyzing={contract.busy === 'audit'} onAnalyze={contract.runAudit} onSource={setSource} />
+      {contract.audit && <div className="bg-[#151515] text-white p-6 md:px-16"><ReportActions key={contract.audit.doc_id} docId={contract.audit.doc_id} sharing={account !== 'local'} /></div>}
       <ComparisonPanel documents={contract.history} result={contract.comparison} busy={busy} comparing={contract.busy === 'compare'} onCompare={contract.compare} onSource={setSource} />
     </main>
     {source && <SourceViewer selection={source} onClose={closeSource} />}

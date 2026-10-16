@@ -63,7 +63,8 @@ def infra():
     redis = redis_client(settings)
     store = PostgresStore(settings, objects, RetrievalCache(redis), embedder=Embeddings(), connect=connect)
     with store.connection() as conn:
-        conn.execute((Path(__file__).parents[1] / "migrations/001_production.sql").read_text())
+        for migration in sorted((Path(__file__).parents[1] / "migrations").glob("*.sql")):
+            conn.execute(migration.read_text())
     queue = Queue("ciq-test-" + uuid4().hex, connection=redis, serializer=JSONSerializer)
     try:
         yield settings, store, redis, queue
@@ -200,3 +201,64 @@ def test_authenticated_api_does_not_expose_other_users_documents(infra):
                            ("/compare", {"before_id": doc, "after_id": str(uuid4())})):
             assert client.post(path, headers=headers, json=body).status_code == 404
         assert client.delete(f"/document/{doc}", headers=headers).status_code == 404
+
+
+def test_product_reports_shares_and_workspace_tenant_boundaries(infra):
+    from test_product import sample_audit
+
+    from product_store import ProductStore
+
+    settings, store, _, queue = infra
+    alice, bob = str(uuid4()), str(uuid4())
+    products = ProductStore(store)
+    with as_owner(alice):
+        doc = Ingestion(settings, store, queue).submit("lease.txt", TEXT)["doc_id"]
+        process_with_store(alice, doc, store, settings)
+        products.save(sample_audit(doc))
+        shared = products.share(doc, 86400)
+        assert shared.expires_at <= store.get(doc).metadata.expires_at
+        with store.connection() as conn:
+            row = conn.execute("SELECT token_hash FROM audit_shares WHERE document_id=%s", (doc,)).fetchone()
+            assert row["token_hash"] != shared.token and len(row["token_hash"]) == 64
+        products.save(sample_audit(doc, summary="A later audit"))
+        assert products.read_share(shared.token).audit.summary != "A later audit"
+    with as_owner(bob):
+        assert products.documents() == []
+        for operation in (products.get, products.revoke):
+            with pytest.raises(MissingDocument):
+                operation(doc)
+        with pytest.raises(MissingDocument):
+            products.share(doc, 60)
+    class Verifier:
+        def verify(self, token):
+            if token not in {alice, bob}:
+                raise ServiceError(401, "Invalid session")
+            return token
+    class NoProvider:
+        def generate(self, *args, **kwargs):
+            raise AssertionError("Unauthorized documents must never reach the provider")
+    app = create_app(settings, RAGService(settings, store, NoProvider()), verifier=Verifier(), ingestion=Ingestion(settings, store, queue))
+    with TestClient(app) as client:
+        response = client.post("/share/read", json={"token": shared.token})
+        assert response.status_code == 200 and response.headers["cache-control"] == "no-store"
+        assert "chunks" not in response.json() and "pages" not in response.json()
+        assert client.get("/documents").status_code == 401
+        headers = {"Authorization": "Bearer " + bob}
+        for path in (f"/document/{doc}/report", f"/document/{doc}/audit"):
+            assert client.get(path, headers=headers).status_code == 404
+        assert client.post(f"/document/{doc}/shares", headers=headers, json={}).status_code == 404
+        assert client.delete(f"/document/{doc}/shares", headers=headers).status_code == 404
+        assert client.post("/workspace/chat", headers=headers, json={"doc_ids": [doc, str(uuid4())], "question": "Compare"}).status_code == 404
+        assert client.post("/share/read", json={"token": "x" * 43}).status_code == 404
+        with as_owner(alice):
+            products.revoke(doc)
+        assert client.post("/share/read", json={"token": shared.token}).status_code == 404
+        with as_owner(alice):
+            shared = products.share(doc, 60)
+            with store.connection() as conn:
+                conn.execute("UPDATE audit_shares SET expires_at=%s WHERE document_id=%s", (time.time() - 1, doc))
+        assert client.post("/share/read", json={"token": shared.token}).status_code == 404
+        with as_owner(alice):
+            shared = products.share(doc, 60)
+            store.delete(doc)
+        assert client.post("/share/read", json={"token": shared.token}).status_code == 404

@@ -12,7 +12,8 @@ def main() -> None:
     settings = Settings.from_env()
     with psycopg.connect(settings.database_url, connect_timeout=5) as conn:
         conn.execute("SELECT pg_advisory_xact_lock(72143588)")
-        conn.execute((Path(__file__).parent / "migrations/001_production.sql").read_text(encoding="utf-8"))
+        for migration in sorted((Path(__file__).parent / "migrations").glob("*.sql")):
+            conn.execute(migration.read_text(encoding="utf-8"))
     print("Production schema is ready.")
 
 

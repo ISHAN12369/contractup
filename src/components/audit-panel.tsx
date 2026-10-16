@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Audit, IndiaContext, SourceSelection } from '@/lib/audit-contracts';
 import { LegalNotice } from './legal-notice';
+import { RiskHeatmap } from './risk-heatmap';
 
 const RULES = ['applicability', 'deposit', 'lock_in', 'notice', 'stamp', 'registration', 'escalation'];
 const DEFAULT_INDIA: IndiaContext = { enabled: false, state: '', premises: 'unknown', model_act_applicable: false, monthly_rent: null, deposit: null, enabled_rules: RULES };
@@ -39,6 +40,7 @@ export function AuditPanel({ result, available, busy, analyzing, onAnalyze, onSo
         <details className="mt-4 text-xs"><summary className="cursor-pointer">How the score works</summary><p className="mt-2">High 80: uncapped liability, non-compete, perpetual licence, covenant not to sue, or restrictive wording. Medium 50: material control/continuing-obligation types. Low 20: remaining extracted types. Overall = maximum clause score. Missing clauses never count as safe. Rule: review-priority-v1.</p></details>
       </div>
       <div className="flex gap-2 flex-wrap" aria-label="Filter review priority">{['all', 'high', 'medium', 'low'].map(value => <button key={value} aria-pressed={filter === value} className={`border px-3 py-2 text-xs ${filter === value ? 'border-coral text-coral' : 'border-white/30'}`} onClick={() => setFilter(value)}>{value.toUpperCase()}</button>)}</div>
+      <RiskHeatmap audit={result} onSelect={clause => onSource({ docId: result.doc_id, location: clause.location, quote: clause.quoted_text })} />
       {result.clauses.filter(clause => filter === 'all' || clause.risk.level === filter).map(clause => <article key={clause.id} className="border border-white/20 p-5 space-y-3">
         <div className="flex flex-wrap justify-between gap-2"><h3 className="font-bold">{clause.type}</h3><span className="text-xs uppercase text-coral">{clause.risk.level} · {clause.risk.score}</span></div>
         <p className="text-xs opacity-70">Party: {clause.party} · Model confidence: {clause.confidence.toFixed(2)} (uncalibrated)</p>

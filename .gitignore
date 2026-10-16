@@ -28,6 +28,9 @@ evals/.cache/
 evals/private/
 evals/runs/
 .phase3-delivery/
+.phase4-delivery/
+tmp/pdfs/
+output/pdf/
 .venv-load/
 playwright-report/
 test-results/

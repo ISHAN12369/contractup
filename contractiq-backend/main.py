@@ -24,6 +24,15 @@ from config import Settings
 from errors import ServiceError
 from ingestion import Ingestion, production_store, redis_client
 from postgres_store import PostgresStore
+from product_schemas import (
+    SavedAudit,
+    ShareCreated,
+    ShareRequest,
+    ShareToken,
+    WorkspaceAnswer,
+    WorkspaceQuestion,
+)
+from product_store import ProductStore
 from providers import ProviderChain, create_provider
 from rag_pipeline import RAGService
 from redis_services import RedisLimiter
@@ -38,6 +47,7 @@ from schemas import (
 from security import SecurityMiddleware
 from storage import ChromaIndex, DocumentStore
 from telemetry import configure_telemetry, flush_telemetry, report_error
+from workspace import answer_workspace
 
 logger = logging.getLogger(__name__)
 T = TypeVar("T")
@@ -91,7 +101,8 @@ def create_app(settings: Settings | None = None, service: RAGService | None = No
             distributed.close()
         await run_in_threadpool(flush_telemetry)
 
-    app = FastAPI(title="ContractIQ RAG Backend", version="0.3.0", lifespan=lifespan)
+    app = FastAPI(title="ContractIQ RAG Backend", version="0.4.0", lifespan=lifespan)
+    products = ProductStore(active_service.store)
     app.state.service = active_service
     app.add_middleware(
         CORSMiddleware, allow_origins=settings.cors_origins, allow_credentials=False,
@@ -159,7 +170,47 @@ def create_app(settings: Settings | None = None, service: RAGService | None = No
 
     @app.post("/audit", response_model=AuditResponse)
     async def audit(request: AuditRequest) -> AuditResponse:
-        return await run_in_threadpool(bounded, lambda: active_service.audit(str(request.doc_id), request.india))
+        def run() -> AuditResponse:
+            result = active_service.audit(str(request.doc_id), request.india)
+            products.save(result)
+            return result
+        return await run_in_threadpool(bounded, run)
+
+    @app.get("/documents", response_model=list[DocumentMetadata])
+    def documents() -> list[DocumentMetadata]:
+        return products.documents()
+
+    @app.post("/workspace/chat", response_model=WorkspaceAnswer)
+    async def workspace_chat(request: WorkspaceQuestion) -> WorkspaceAnswer:
+        return await run_in_threadpool(bounded, lambda: answer_workspace(active_service, request))
+
+    @app.get("/document/{doc_id}/audit", response_model=SavedAudit)
+    def saved_audit(doc_id: UUID) -> SavedAudit:
+        return products.get(str(doc_id))
+
+    @app.get("/document/{doc_id}/report")
+    def report(doc_id: UUID) -> Response:
+        from reports import render_report
+        def render() -> bytes:
+            result = render_report(products.get(str(doc_id)))
+            active_service.store.get(str(doc_id))
+            return result
+        return Response(bounded(render), media_type="application/pdf", headers={
+            "Content-Disposition": 'attachment; filename="contractiq-audit.pdf"',
+        })
+
+    @app.post("/document/{doc_id}/shares", response_model=ShareCreated)
+    def create_share(doc_id: UUID, request: ShareRequest) -> ShareCreated:
+        return products.share(str(doc_id), request.ttl_seconds)
+
+    @app.delete("/document/{doc_id}/shares")
+    def revoke_shares(doc_id: UUID) -> dict[str, bool]:
+        products.revoke(str(doc_id))
+        return {"revoked": True}
+
+    @app.post("/share/read", response_model=SavedAudit)
+    def read_share(request: ShareToken) -> SavedAudit:
+        return products.read_share(request.token)
 
     @app.post("/compare", response_model=CompareResponse)
     async def compare(request: CompareRequest) -> CompareResponse:

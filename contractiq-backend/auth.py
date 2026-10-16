@@ -55,7 +55,8 @@ class AuthMiddleware:
         self.app, self.verifier, self.limiter = app, verifier, limiter
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        if scope["type"] != "http" or scope["path"] in {"/health", "/ready"} or scope["method"] == "OPTIONS":
+        if (scope["type"] != "http" or scope["path"] in {"/health", "/ready"} or scope["method"] == "OPTIONS"
+                or (scope["path"] == "/share/read" and scope["method"] == "POST")):
             await self.app(scope, receive, send)
             return
         try:

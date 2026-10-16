@@ -3,6 +3,7 @@ import { benefitsSchema, chatSchema, documentSchema, Message } from './contracts
 import { auditSchema, comparisonSchema, IndiaContext, sourceDocumentSchema } from './audit-contracts';
 import { consumeChatStream, StreamError } from './sse';
 import { authenticatedHeaders, authEpoch } from './auth-session';
+import { savedAuditSchema, shareSchema, workspaceAnswerSchema } from './product-contracts';
 
 const BASE_URL = (process.env.NEXT_PUBLIC_RAG_API_URL || 'http://localhost:8000').replace(/\/$/, '');
 
@@ -21,6 +22,7 @@ async function request<S extends z.ZodTypeAny>(path: string, schema: S, init: Re
     if (epoch !== authEpoch()) throw new ApiError('Your session changed. Please retry.', 401);
     const requestId = response.headers.get('X-Request-ID') || undefined;
     const data: unknown = await response.json().catch(() => null);
+    if (epoch !== authEpoch()) throw new ApiError('Your session changed. Please retry.', 401);
     if (!response.ok) {
       const error = z.object({ detail: z.string() }).safeParse(data);
       throw new ApiError(error.success ? error.data.detail : 'The server could not process this request.', response.status, requestId);
@@ -46,6 +48,21 @@ function json(value: unknown): RequestInit {
 const ingestionSchema = z.object({ doc_id: z.string().uuid(), status: z.enum(['uploading', 'queued', 'processing', 'ready', 'failed']), document: documentSchema.optional(), detail: z.string().optional() });
 
 export const api = {
+  documents() { return request('/documents', z.array(documentSchema)); },
+  savedAudit(id: string) { return request(`/document/${encodeURIComponent(id)}/audit`, savedAuditSchema); },
+  workspaceChat(docIds: string[], question: string) { return request('/workspace/chat', workspaceAnswerSchema, json({ doc_ids: docIds, question })); },
+  createShare(id: string, ttl: number) { return request(`/document/${encodeURIComponent(id)}/shares`, shareSchema, json({ ttl_seconds: ttl })); },
+  revokeShares(id: string) { return request(`/document/${encodeURIComponent(id)}/shares`, z.object({ revoked: z.boolean() }), { method: 'DELETE' }); },
+  readShare(token: string) { return request('/share/read', savedAuditSchema, json({ token })); },
+  async report(id: string): Promise<Blob> {
+    const epoch = authEpoch();
+    const response = await fetch(`${BASE_URL}/document/${encodeURIComponent(id)}/report`, { headers: await authenticatedHeaders(), cache: 'no-store', signal: AbortSignal.timeout(60_000) });
+    if (!response.ok) throw new ApiError(response.status === 409 ? 'Run an audit before exporting it.' : 'The report is unavailable or expired.', response.status);
+    const blob = await response.blob();
+    if (epoch !== authEpoch()) throw new ApiError('Your session changed.', 401);
+    if (!response.headers.get('Content-Type')?.startsWith('application/pdf')) throw new ApiError('Invalid report response.', 502);
+    return blob;
+  },
   async upload(file: File, onStatus?: (status: string) => void) {
     const body = new FormData();
     body.append('file', file);

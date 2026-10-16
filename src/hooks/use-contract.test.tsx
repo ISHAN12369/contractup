@@ -7,9 +7,9 @@ import { useContract } from './use-contract';
 
 vi.mock('@/lib/api', async importOriginal => {
   const actual = await importOriginal<typeof import('@/lib/api')>();
-  return { ...actual, api: { upload: vi.fn(), document: vi.fn(), remove: vi.fn(), benefits: vi.fn(), chat: vi.fn(), audit: vi.fn(), compare: vi.fn() } };
+  return { ...actual, api: { upload: vi.fn(), document: vi.fn(), savedAudit: vi.fn(), remove: vi.fn(), benefits: vi.fn(), chat: vi.fn(), audit: vi.fn(), compare: vi.fn() } };
 });
-beforeEach(() => { vi.mocked(api.upload).mockResolvedValue(doc); });
+beforeEach(() => { vi.mocked(api.upload).mockResolvedValue(doc); vi.mocked(api.savedAudit).mockRejectedValue(new ApiError('No saved audit', 409)); });
 
 it('restores using doc_id without uploading stored text', async () => {
   saveHistory([doc]);

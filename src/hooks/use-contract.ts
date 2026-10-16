@@ -88,9 +88,14 @@ export function useContract(account = 'local') {
     await run('history', async version => {
       try {
         const result = await api.document(item.doc_id);
+        const saved = await api.savedAudit(item.doc_id).catch(failure => {
+          if (failure instanceof ApiError && failure.status === 409) return null;
+          throw failure;
+        });
         if (generation.current !== version) return;
         setDocument(result); setMessages([]); setBenefits(null);
-        setAudit(null); setComparison(null);
+        setAudit(saved?.audit ?? null); setComparison(null);
+          remember([result, ...readHistory().filter(doc => doc.doc_id !== result.doc_id)].slice(0, 10));
       } catch (failure) {
         if (generation.current === version && failure instanceof ApiError && failure.status === 404) {
           remember(readHistory().filter(doc => doc.doc_id !== item.doc_id));

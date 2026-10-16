@@ -32,7 +32,20 @@ from test_infrastructure import infra
 
 class FixtureProvider:
     def generate(self, schema, prompt, *, deadline, validate=None):
-        value = schema.model_validate({"answer": "Monthly rent is INR 24000. [Excerpt 1]", "excerpt_ids": [1]})
+        if schema.__name__ in {"ContractClassification", "ClauseBatch", "WorkspaceResult"}:
+            evidence = json.loads(prompt.split('<untrusted_contract_data>\n', 1)[1].split('\n</untrusted_contract_data>', 1)[0])
+            if schema.__name__ == "ContractClassification":
+                payload = {"contract_type": "lease", "evidence": evidence[0]["text"][:100], "chunk_id": evidence[0]["id"]}
+            elif schema.__name__ == "ClauseBatch":
+                payload = {"clauses": [{"type": "Uncapped Liability", "quoted_text": item["text"], "chunk_id": item["id"], "party": "Tenant", "confidence": 0.8} for item in evidence if "unlimited" in item["text"].lower()]}
+            else:
+                seen = {}
+                for item in evidence["excerpts"]:
+                    seen.setdefault(item["document"], item["excerpt"])
+                payload = {"answer": " ".join(f"{label} contains relevant terms. [Excerpt {number}]" for label, number in seen.items()), "excerpt_ids": list(seen.values())}
+            value = schema.model_validate(payload)
+        else:
+            value = schema.model_validate({"answer": "Monthly rent is INR 24000. [Excerpt 1]", "excerpt_ids": [1]})
         if validate:
             validate(value)
         return value
